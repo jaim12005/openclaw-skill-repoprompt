@@ -1,6 +1,6 @@
 # Sources
 
-- Original internal skill (no upstream origin metadata).
-
-Notes:
-- This repository is maintained as an original OpenClaw skill (no fork).
+## Official docs
+- Repo Prompt docs: https://repoprompt.com/docs
+- Repo Prompt MCP server docs: https://repoprompt.com/docs#s=mcp-server
+- OpenClaw skills docs: https://docs.openclaw.ai/tools/skills
