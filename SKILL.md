@@ -13,6 +13,7 @@ Use this skill when you need to drive the Repo Prompt macOS app programmatically
 - Repo Prompt app is running.
 - In Repo Prompt: Settings → MCP Server → MCP Server enabled.
 - rp-cli is installed to PATH (Repo Prompt can install it via Settings → MCP Server → Install CLI to PATH).
+- MCP connections require user approval and tool access control in Repo Prompt.
 
 ## Local defaults (this machine)
 
@@ -26,13 +27,21 @@ You can override defaults per-command by passing flags, or globally by setting e
 - RP_TAB (default: T1)
 - RP_WINDOW (optional, required if multiple windows are open)
 
-## Key Concepts
+## Key Concepts (from Repo Prompt docs)
 
 - **Selection is context**: Repo Prompt chat (and many workflows) only see what is currently selected.
-- **Window/tab routing**: if more than one Repo Prompt window is open, you must provide `-w <id>` on *every* `rp-cli` invocation; use `-t <tab>` to pin operations to a compose tab.
-- **Two integration surfaces**:
-  - **MCP** (persistent, structured JSON, tab binding)
-  - **rp-cli** (ephemeral, chainable, pipeable output; ideal for agents that only have a shell tool)
+- **Selection modes**: full, slices (line ranges), and codemap_only (signatures only) for token-efficient context.
+- **MCP server**: lets agents select files, read code structure, and apply edits through standardized tools.
+- **Context Builder**: uses tree-sitter and parallel parsing to auto-select relevant files.
+- **Multi-root workspaces**: analyze multiple repos as a unified context.
+- **CLI Providers**: use existing subscriptions (Claude, ChatGPT, Google AI) without extra API cost.
+
+## MCP Tool Categories (Docs Summary)
+
+- **Selection & Context**: manage_selection, workspace_context, prompt, context_builder
+- **File Operations**: get_file_tree, file_search, read_file, get_code_structure, file_actions, apply_edits
+- **Chat & Models**: chat_send, chats, list_models
+- **Workspaces**: manage_workspaces
 
 ## Recommended operating pattern ("Repo Prompt first")
 
@@ -65,12 +74,27 @@ rp-cli -w 1 -t MyTab -e 'chat "Explain this code" --new'
 
 ## JSON-first calls (for editing)
 
-`apply_edits` and `file_actions` are easiest via JSON:
+apply_edits and file_actions are easiest via JSON:
 
 ```bash
 rp-cli -w 1 -t MyTab -e 'call apply_edits {"path":"src/a.ts","search":"old","replace":"new","all":true}'
-rp-cli -w 1 -t MyTab -e 'call file_actions {"action":"create","path":"src/new.ts","content":"export {}\n"}'
+rp-cli -w 1 -t MyTab -e 'call file_actions {"action":"create","path":"src/new.ts","content":"export {}
+"}'
 ```
+
+## Best Practices
+
+- Use codemap_only for reference files, full for files being edited, slices for targeted context.
+- Prefer context_builder for large repos or ambiguous asks; refine selection manually if needed.
+- Keep selections small and reviewable; export prompt snapshots when handing off to coding agents.
+- For multi-repo work, use a multi-root workspace rather than stitching separate prompts.
+
+## Troubleshooting
+
+- If rp-cli can’t see files, confirm you’re in the correct workspace and that the workspace root contains the target path.
+- If multiple Repo Prompt windows are open, pass -w on every rp-cli call.
+- If MCP tools are missing, re-enable MCP Server and re-approve the connection in Repo Prompt.
+- Cursor one-click setup is available; other editors require manual MCP configuration.
 
 ## Scripts
 
@@ -89,4 +113,3 @@ When you want an implementation agent (Codex/Claude Code/etc.) to do the actual 
 1) Use plan-export.sh to generate a single context file.
 2) Run the coding agent in the repo’s folder, and tell it to read that context file as the source of truth.
 3) Apply multi-file edits back through Repo Prompt (apply_edits/file_actions) where possible.
-
