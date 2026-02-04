@@ -1,15 +1,20 @@
 # OpenClaw Skill: repoprompt
 
 ## Overview
-Automate Repo Prompt (MCP + rp-cli) for context building, file selection, chat_send, and exports. Provides patterns for window/tab targeting and scripting.
+Automate Repo Prompt (MCP + rp-cli) for context building, file selection, chat_send, and exports.
 
-## Permissions
+## Requirements
+- Repo Prompt app running
+- MCP Server enabled in Repo Prompt settings
+- rp-cli on PATH
 
-- filesystem:$HOME/Documents/github
-- mcp
+## Install (OpenClaw)
+1) Clone this repo into ~/clawd/skills/repoprompt (or ~/.openclaw/skills/repoprompt).
+2) Enable MCP Server in Repo Prompt and install rp-cli to PATH.
+3) Restart the OpenClaw gateway.
 
 ## Usage
-See SKILL.md for command reference and examples.
+See SKILL.md for recommended workflows, recipes, and JSON edit calls.
 
 ## Sources
 See SOURCES.md.
