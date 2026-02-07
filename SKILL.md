@@ -48,6 +48,7 @@ PYTHONPATH=src python3 -m rpflow.cli call --workspace GitHub --tab T1 --tool app
 # Export helpers
 PYTHONPATH=src python3 -m rpflow.cli export --workspace GitHub --tab T1 --select-set repo/src/,repo/README.md --out /tmp/context.md
 PYTHONPATH=src python3 -m rpflow.cli plan-export --workspace GitHub --tab T1 --select-set repo/src/ --task "draft plan" --out /tmp/plan.md --fallback-export-on-timeout
+PYTHONPATH=src python3 -m rpflow.cli autopilot --workspace GitHub --tab T1 --select-set repo/src/ --task "draft plan" --out /tmp/plan.md --fallback-export-on-timeout
 
 # Deterministic runs (CI-like): explicit routing required
 PYTHONPATH=src python3 -m rpflow.cli exec --strict --window 1 --tab T1 --workspace GitHub -e 'tabs'
@@ -91,7 +92,7 @@ cat edits.json | rp-cli -w 1 -t T1 -c apply_edits -j @-
 ## Timeout / fallback policy
 
 - Context Builder can occasionally stall.
-- Prefer `rpflow plan-export --fallback-export-on-timeout` to still produce a usable export.
+- Prefer `rpflow autopilot --fallback-export-on-timeout` (or `plan-export`) to still produce a usable export.
 - Treat timeout as a normal operational state, not a silent success.
 
 ## Scripts in this skill

@@ -22,6 +22,7 @@ See SKILL.md for the operating model, command matrix, strict mode, timeout/fallb
 Quick wrapper example:
 - `skills/repoprompt/scripts/rpflow.sh smoke`
 - `skills/repoprompt/scripts/rpflow.sh exec -e 'tabs'`
+- `skills/repoprompt/scripts/rpflow.sh autopilot --select-set repo/src/ --task "draft plan" --out /tmp/plan.md --fallback-export-on-timeout`
 
 ## Sources
 See SOURCES.md.

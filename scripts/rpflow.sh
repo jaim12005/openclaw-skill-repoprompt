@@ -15,10 +15,11 @@ Examples:
   rpflow.sh smoke --workspace GitHub --tab T1
   rpflow.sh exec -e 'tabs'
   rpflow.sh call --tool apply_edits --json-arg @edits.json
+  rpflow.sh autopilot --select-set repo/src/ --task "draft plan" --out /tmp/plan.md
 
 Behavior:
   - Runs rpflow from RPFLOW_REPO (default: $HOME/Documents/github/repoprompt-rpflow-cli)
-  - For exec/call/export/plan-export/smoke, injects default --workspace/--tab when not provided
+  - For exec/call/export/plan-export/autopilot/smoke, injects default --workspace/--tab when not provided
 USAGE
 }
 
@@ -44,7 +45,7 @@ ARGS=("$@")
 
 needs_route_defaults() {
   case "$SUBCMD" in
-    exec|call|export|plan-export|smoke) return 0 ;;
+    exec|call|export|plan-export|autopilot|smoke) return 0 ;;
     *) return 1 ;;
   esac
 }
