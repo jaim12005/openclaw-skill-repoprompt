@@ -24,6 +24,7 @@ Quick wrapper example:
 - `skills/repoprompt/scripts/rpflow.sh smoke`
 - `skills/repoprompt/scripts/rpflow.sh exec -e 'tabs'`
 - `skills/repoprompt/scripts/rpflow.sh autopilot --select-set repo/src/ --task "draft plan" --out /tmp/plan.md --fallback-export-on-timeout`
+- `skills/repoprompt/scripts/rpflow.sh autopilot --select-set repo/src/ --task "draft plan" --out /tmp/plan.md --report-json /tmp/rpflow-run.json`
 
 ## Sources
 See SOURCES.md.

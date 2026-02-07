@@ -50,6 +50,10 @@ PYTHONPATH=src python3 -m rpflow.cli export --workspace GitHub --tab T1 --select
 PYTHONPATH=src python3 -m rpflow.cli plan-export --workspace GitHub --tab T1 --select-set repo/src/ --task "draft plan" --out /tmp/plan.md --fallback-export-on-timeout
 PYTHONPATH=src python3 -m rpflow.cli autopilot --workspace GitHub --tab T1 --select-set repo/src/ --task "draft plan" --out /tmp/plan.md --fallback-export-on-timeout
 
+# Optional reliability/audit knobs
+PYTHONPATH=src python3 -m rpflow.cli autopilot --workspace GitHub --tab T1 --select-set repo/src/ --task "draft plan" --out /tmp/plan.md --report-json /tmp/rpflow-run.json
+PYTHONPATH=src python3 -m rpflow.cli plan-export --workspace GitHub --tab T1 --select-set repo/src/ --task "draft plan" --out /tmp/plan.md --resume-from-export /tmp/last-known-good.md
+
 # Deterministic runs (CI-like): explicit routing required
 PYTHONPATH=src python3 -m rpflow.cli exec --strict --window 1 --tab T1 --workspace GitHub -e 'tabs'
 ```
@@ -93,6 +97,8 @@ cat edits.json | rp-cli -w 1 -t T1 -c apply_edits -j @-
 
 - Context Builder can occasionally stall.
 - Prefer `rpflow autopilot --fallback-export-on-timeout` (or `plan-export`) to still produce a usable export.
+- For auditability, add `--report-json /path/report.json` on critical runs.
+- Optional: use `--resume-from-export /tmp/last-known-good.md` for degraded recovery.
 - Treat timeout as a normal operational state, not a silent success.
 
 ## Scripts in this skill
