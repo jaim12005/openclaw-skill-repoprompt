@@ -12,6 +12,10 @@ Most wrappers in scripts/ now delegate to rpflow (bootstrap-github.sh is the one
 - rp-cli on PATH
 - rpflow repo available at $HOME/Documents/github/repoprompt-rpflow-cli (for preferred flows)
 
+Optional env defaults:
+- RP_WORKSPACE, RP_TAB, RP_WINDOW
+- RP_PROFILE (fast|normal|deep; default normal)
+
 ## Install (OpenClaw)
 1) Clone this repo into ~/clawd/skills/repoprompt (or ~/.openclaw/skills/repoprompt).
 2) Enable MCP Server in Repo Prompt and install rp-cli to PATH.
@@ -26,6 +30,7 @@ Quick wrapper example:
 - `skills/repoprompt/scripts/rpflow.sh autopilot --select-set repo/src/ --task "draft plan" --out /tmp/plan.md --fallback-export-on-timeout`
 - `skills/repoprompt/scripts/rpflow.sh autopilot --select-set repo/src/ --task "draft plan" --out /tmp/plan.md --report-json /tmp/rpflow-run.json`
 - `skills/repoprompt/scripts/rpflow.sh autopilot --profile fast --select-set repo/src/ --task "draft plan" --out /tmp/plan.md --retry-on-timeout --fallback-export-on-timeout`
+- `skills/repoprompt/scripts/report-summary.sh /tmp/rpflow-run.json`
 
 ## Sources
 See SOURCES.md.

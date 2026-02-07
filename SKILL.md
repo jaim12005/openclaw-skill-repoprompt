@@ -27,6 +27,7 @@ Environment overrides:
 - RP_WORKSPACE (default: GitHub)
 - RP_TAB (default: T1)
 - RP_WINDOW (optional, required if multiple windows are open)
+- RP_PROFILE (default: normal; used by scripts/rpflow.sh when --profile is omitted)
 
 ## Preferred interface on this machine: rpflow
 
@@ -54,6 +55,7 @@ PYTHONPATH=src python3 -m rpflow.cli autopilot --workspace GitHub --tab T1 --sel
 PYTHONPATH=src python3 -m rpflow.cli autopilot --workspace GitHub --tab T1 --select-set repo/src/ --task "draft plan" --out /tmp/plan.md --report-json /tmp/rpflow-run.json
 PYTHONPATH=src python3 -m rpflow.cli plan-export --workspace GitHub --tab T1 --select-set repo/src/ --task "draft plan" --out /tmp/plan.md --resume-from-export /tmp/last-known-good.md
 PYTHONPATH=src python3 -m rpflow.cli autopilot --workspace GitHub --tab T1 --profile fast --select-set repo/src/ --task "draft plan" --out /tmp/plan.md --retry-on-timeout --fallback-export-on-timeout
+bash $HOME/clawd/skills/repoprompt/scripts/report-summary.sh /tmp/rpflow-run.json
 
 # Deterministic runs (CI-like): explicit routing required
 PYTHONPATH=src python3 -m rpflow.cli exec --strict --window 1 --tab T1 --workspace GitHub -e 'tabs'
@@ -111,6 +113,7 @@ cat edits.json | rp-cli -w 1 -t T1 -c apply_edits -j @-
 - scripts/export-prompt.sh: rpflow export wrapper.
 - scripts/plan-export.sh: rpflow autopilot wrapper (preflight + plan-export + fallback).
 - scripts/context-flow.sh: end-to-end flow with codemap/slices via rpflow exec.
+- scripts/report-summary.sh: concise reader for rpflow --report-json outputs.
 - scripts/bootstrap-github.sh: one-time workspace bootstrap (raw rp-cli exception for first-time workspace creation).
 
 Use scripts when you want lightweight shell wrappers. Use rpflow for standardized orchestration.

@@ -4,6 +4,7 @@ set -euo pipefail
 RPFLOW_REPO="${RPFLOW_REPO:-$HOME/Documents/github/repoprompt-rpflow-cli}"
 DEFAULT_WORKSPACE="${RP_WORKSPACE:-GitHub}"
 DEFAULT_TAB="${RP_TAB:-T1}"
+DEFAULT_PROFILE="${RP_PROFILE:-normal}"
 
 usage() {
   cat <<'USAGE'
@@ -19,6 +20,7 @@ Examples:
 
 Behavior:
   - Runs rpflow from RPFLOW_REPO (default: $HOME/Documents/github/repoprompt-rpflow-cli)
+  - Injects default --profile (RP_PROFILE or normal) when not provided
   - For exec/call/export/plan-export/autopilot/smoke, injects default --workspace/--tab when not provided
 USAGE
 }
@@ -58,6 +60,10 @@ has_flag() {
   done
   return 1
 }
+
+if ! has_flag "--profile" "${ARGS[@]}"; then
+  ARGS=(--profile "$DEFAULT_PROFILE" "${ARGS[@]}")
+fi
 
 if needs_route_defaults; then
   if ! has_flag "--workspace" "${ARGS[@]}"; then
