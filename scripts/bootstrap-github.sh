@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Note: this bootstrap uses rp-cli directly on purpose.
+# Reason: rpflow requires a workspace switch before commands run;
+# during first-time workspace creation there may be no target workspace yet.
+# After bootstrap, use rpflow-first scripts for all normal operations.
+
 ROOT="$HOME/Documents/github"
 WORKSPACE_NAME="GitHub"
 

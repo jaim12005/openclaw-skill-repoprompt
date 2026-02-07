@@ -107,24 +107,6 @@ print(json.dumps(slices))
 PY
 )
 
-ARGS=()
-if [[ -n "$WINDOW" ]]; then ARGS+=("-w" "$WINDOW"); fi
-if [[ -n "$TAB" ]]; then ARGS+=("-t" "$TAB"); fi
-
-safe_workspace_switch() {
-  local out rc
-  set +e
-  out=$(rp-cli "${ARGS[@]}" -e "workspace switch \"$WORKSPACE\"" 2>&1)
-  rc=$?
-  set -e
-  [[ $rc -eq 0 ]] && return 0
-  echo "$out" | grep -qi 'already on workspace' && return 0
-  echo "$out" >&2
-  return $rc
-}
-
-safe_workspace_switch
-
 rm -f "$OUT"
 
 CMD='call manage_selection {"op":"clear"}'
@@ -150,5 +132,10 @@ fi
 
 CMD+=" && prompt export \"$OUT\""
 
-rp-cli "${ARGS[@]}" -e "$CMD"
+RPF_ARGS=(exec -e "$CMD")
+if [[ -n "$WINDOW" ]]; then RPF_ARGS+=(--window "$WINDOW"); fi
+if [[ -n "$TAB" ]]; then RPF_ARGS+=(--tab "$TAB"); fi
+if [[ -n "$WORKSPACE" ]]; then RPF_ARGS+=(--workspace "$WORKSPACE"); fi
+
+"$SCRIPT_DIR/rpflow.sh" "${RPF_ARGS[@]}"
 echo "Prompt exported to: $OUT" >&2

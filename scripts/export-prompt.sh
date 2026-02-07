@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Export an LLM-ready prompt/context file from Repo Prompt via rp-cli.
+# Export an LLM-ready prompt/context file from Repo Prompt via rpflow.
 #
 # Usage:
 #   export-prompt.sh -w 1 -t MyTab --workspace MyProject --select-set src/ --out ~/context.md
@@ -16,6 +16,8 @@ DEFAULT_WINDOW="${RP_WINDOW:-}"
 DEFAULT_WORKSPACE="${RP_WORKSPACE:-GitHub}"
 DEFAULT_TAB="${RP_TAB:-T1}"
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 usage() {
   cat <<'USAGE'
 Usage:
@@ -23,25 +25,20 @@ Usage:
 
 Notes:
   - PATHS can be a comma-separated list (e.g. src/,lib/)
-  - Requires Repo Prompt running + MCP Server enabled + rp-cli on PATH
+  - Requires Repo Prompt running + MCP Server enabled + rpflow repo available
   - Defaults: RP_WINDOW (optional), RP_TAB (or T1), RP_WORKSPACE (or GitHub)
 USAGE
 }
 
-if ! command -v rp-cli >/dev/null 2>&1; then
-  echo "rp-cli not found in PATH." >&2
-  exit 1
-fi
-
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    -w|--window) WINDOW="$2"; shift 2;;
-    -t|--tab) TAB="$2"; shift 2;;
-    --workspace) WORKSPACE="$2"; shift 2;;
-    --select-set) SELECT_SET="$2"; shift 2;;
-    --out) OUT="$2"; shift 2;;
-    -h|--help) usage; exit 0;;
-    *) echo "Unknown arg: $1" >&2; usage; exit 2;;
+    -w|--window) WINDOW="$2"; shift 2 ;;
+    -t|--tab) TAB="$2"; shift 2 ;;
+    --workspace) WORKSPACE="$2"; shift 2 ;;
+    --select-set) SELECT_SET="$2"; shift 2 ;;
+    --out) OUT="$2"; shift 2 ;;
+    -h|--help) usage; exit 0 ;;
+    *) echo "Unknown arg: $1" >&2; usage; exit 2 ;;
   esac
 done
 
@@ -55,36 +52,12 @@ if [[ -z "$WORKSPACE" || -z "$SELECT_SET" || -z "$OUT" ]]; then
   exit 2
 fi
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 bash "$SCRIPT_DIR/preflight.sh" ${WINDOW:+-w "$WINDOW"} ${TAB:+-t "$TAB"} --workspace "$WORKSPACE" >/dev/null
 
-IFS=',' read -r -a PATHS <<< "$SELECT_SET"
+ARGS=(export --select-set "$SELECT_SET" --out "$OUT")
+if [[ -n "$WINDOW" ]]; then ARGS+=(--window "$WINDOW"); fi
+if [[ -n "$TAB" ]]; then ARGS+=(--tab "$TAB"); fi
+if [[ -n "$WORKSPACE" ]]; then ARGS+=(--workspace "$WORKSPACE"); fi
 
-ARGS=()
-if [[ -n "$WINDOW" ]]; then ARGS+=("-w" "$WINDOW"); fi
-if [[ -n "$TAB" ]]; then ARGS+=("-t" "$TAB"); fi
-
-safe_workspace_switch() {
-  local out rc
-  set +e
-  out=$(rp-cli "${ARGS[@]}" -e "workspace switch \"$WORKSPACE\"" 2>&1)
-  rc=$?
-  set -e
-  [[ $rc -eq 0 ]] && return 0
-  echo "$out" | grep -qi 'already on workspace' && return 0
-  echo "$out" >&2
-  return $rc
-}
-
-safe_workspace_switch
-
-rm -f "$OUT"
-
-CMD="select clear"
-for p in "${PATHS[@]}"; do
-  CMD+=" && select add \"$p\""
-done
-CMD+=" && prompt export \"$OUT\""
-
-rp-cli "${ARGS[@]}" -e "$CMD"
+"$SCRIPT_DIR/rpflow.sh" "${ARGS[@]}"
 echo "Exported to: $OUT" >&2

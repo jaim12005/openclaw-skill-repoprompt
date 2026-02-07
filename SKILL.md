@@ -98,12 +98,12 @@ cat edits.json | rp-cli -w 1 -t T1 -c apply_edits -j @-
 ## Scripts in this skill
 
 - scripts/rpflow.sh: convenience wrapper for rpflow with default workspace/tab injection.
-- scripts/preflight.sh: validates Repo Prompt + MCP + routing.
-- scripts/rp.sh: safe workspace switch + exec wrapper.
-- scripts/export-prompt.sh: selection → prompt export.
-- scripts/plan-export.sh: selection → builder plan → prompt export.
-- scripts/context-flow.sh: end-to-end flow with codemap/slices.
-- scripts/bootstrap-github.sh: ensure GitHub workspace points to $HOME/Documents/github.
+- scripts/preflight.sh: rpflow-based routing health check (smoke).
+- scripts/rp.sh: rpflow exec wrapper.
+- scripts/export-prompt.sh: rpflow export wrapper.
+- scripts/plan-export.sh: rpflow autopilot wrapper (preflight + plan-export + fallback).
+- scripts/context-flow.sh: end-to-end flow with codemap/slices via rpflow exec.
+- scripts/bootstrap-github.sh: one-time workspace bootstrap (raw rp-cli exception for first-time workspace creation).
 
 Use scripts when you want lightweight shell wrappers. Use rpflow for standardized orchestration.
 

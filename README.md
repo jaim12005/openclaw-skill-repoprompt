@@ -4,6 +4,7 @@
 Automate Repo Prompt (MCP + rp-cli) for context building, file selection, chat_send, edits, and exports.
 
 This skill now treats rpflow as the preferred orchestration layer and raw rp-cli as the low-level fallback/debug interface.
+Most wrappers in scripts/ now delegate to rpflow (bootstrap-github.sh is the one setup-time exception).
 
 ## Requirements
 - Repo Prompt app running
