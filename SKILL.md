@@ -20,7 +20,7 @@ Use this skill when you need to drive the Repo Prompt macOS app programmatically
 - Default repo base folder: $HOME/Documents/github
 - Default Repo Prompt workspace name: GitHub
 - Default compose tab (for automation): T1
-- Window selection: single window by default; set RP_WINDOW (or pass -w) if multiple windows
+- Window selection: with one window, -w is optional; set RP_WINDOW (or pass -w) when multiple windows are open
 
 You can override defaults per-command by passing flags, or globally by setting environment variables:
 - RP_WORKSPACE (default: GitHub)
@@ -35,6 +35,14 @@ You can override defaults per-command by passing flags, or globally by setting e
 - **Context Builder**: uses tree-sitter and parallel parsing to auto-select relevant files.
 - **Multi-root workspaces**: analyze multiple repos as a unified context.
 - **CLI Providers**: use existing subscriptions (Claude, ChatGPT, Google AI) without extra API cost.
+
+## Repo Prompt 1.6.14+ updates to use
+
+Use these newer capabilities in automation flows:
+- `--tools-schema` or `tools --schema` for machine-readable tool schemas
+- JSON args via `-j @file.json` or `-j @-` (stdin) for robust edit/file-actions calls
+- Improved workspace/window behavior (window tools always exposed, better MCP reconnect handling)
+- Improved JSON parsing in CLI for escaped/newline-heavy payloads
 
 ## MCP Tool Categories (Docs Summary)
 
@@ -62,6 +70,10 @@ rp-cli -w 1 -e 'tabs'
 # Build selection + export LLM-ready prompt
 rp-cli -w 1 -t MyTab -e 'workspace switch MyProject && select set src/ && prompt export ~/context.md'
 
+# Tool schemas (machine-readable JSON)
+rp-cli --tools-schema
+rp-cli -e 'tools --schema'
+
 # Context builder (context only)
 rp-cli -w 1 -t MyTab -e 'builder "find auth code"'
 
@@ -74,12 +86,15 @@ rp-cli -w 1 -t MyTab -e 'chat "Explain this code" --new'
 
 ## JSON-first calls (for editing)
 
-apply_edits and file_actions are easiest via JSON:
+Prefer direct `--call` + `-j` for reliability:
 
 ```bash
-rp-cli -w 1 -t MyTab -e 'call apply_edits {"path":"src/a.ts","search":"old","replace":"new","all":true}'
-rp-cli -w 1 -t MyTab -e 'call file_actions {"action":"create","path":"src/new.ts","content":"export {}
-"}'
+rp-cli -w 1 -t MyTab -c apply_edits -j '{"path":"src/a.ts","search":"old","replace":"new","all":true}'
+rp-cli -w 1 -t MyTab -c file_actions -j '{"action":"create","path":"src/new.ts","content":"export {}\n"}'
+
+# From file / stdin (new CLI support)
+rp-cli -w 1 -t MyTab -c apply_edits -j @edits.json
+cat edits.json | rp-cli -w 1 -t MyTab -c apply_edits -j @-
 ```
 
 ## Best Practices
@@ -93,6 +108,7 @@ rp-cli -w 1 -t MyTab -e 'call file_actions {"action":"create","path":"src/new.ts
 
 - If rp-cli can’t see files, confirm you’re in the correct workspace and that the workspace root contains the target path.
 - If multiple Repo Prompt windows are open, pass -w on every rp-cli call.
+- If `workspace switch` returns “Already on workspace …”, treat it as a no-op and continue.
 - If MCP tools are missing, re-enable MCP Server and re-approve the connection in Repo Prompt.
 - Cursor one-click setup is available; other editors require manual MCP configuration.
 

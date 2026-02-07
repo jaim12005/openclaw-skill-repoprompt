@@ -13,7 +13,14 @@ mkdir -p "$ROOT"
 
 # Create workspace if missing, otherwise just switch to it.
 if rp-cli -e 'workspace list' | grep -q "• ${WORKSPACE_NAME}"; then
-  rp-cli -e "workspace switch \"$WORKSPACE_NAME\""
+  set +e
+  OUT=$(rp-cli -e "workspace switch \"$WORKSPACE_NAME\"" 2>&1)
+  RC=$?
+  set -e
+  if [[ $RC -ne 0 ]] && ! echo "$OUT" | grep -qi 'already on workspace'; then
+    echo "$OUT" >&2
+    exit $RC
+  fi
 else
   rp-cli -e "workspace create \"$WORKSPACE_NAME\" --folder-path \"$ROOT\" --switch"
 fi

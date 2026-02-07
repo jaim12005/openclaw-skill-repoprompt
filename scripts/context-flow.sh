@@ -48,7 +48,6 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-# Defaults
 if [[ -z "$WINDOW" ]]; then WINDOW="$DEFAULT_WINDOW"; fi
 if [[ -z "$TAB" ]]; then TAB="$DEFAULT_TAB"; fi
 if [[ -z "$WORKSPACE" ]]; then WORKSPACE="$DEFAULT_WORKSPACE"; fi
@@ -112,7 +111,23 @@ ARGS=()
 if [[ -n "$WINDOW" ]]; then ARGS+=("-w" "$WINDOW"); fi
 if [[ -n "$TAB" ]]; then ARGS+=("-t" "$TAB"); fi
 
-CMD="workspace switch \"$WORKSPACE\" && call manage_selection {\"op\":\"clear\"}"
+safe_workspace_switch() {
+  local out rc
+  set +e
+  out=$(rp-cli "${ARGS[@]}" -e "workspace switch \"$WORKSPACE\"" 2>&1)
+  rc=$?
+  set -e
+  [[ $rc -eq 0 ]] && return 0
+  echo "$out" | grep -qi 'already on workspace' && return 0
+  echo "$out" >&2
+  return $rc
+}
+
+safe_workspace_switch
+
+rm -f "$OUT"
+
+CMD='call manage_selection {"op":"clear"}'
 if [[ "$SELECT_JSON" != "[]" ]]; then
   CMD+=" && call manage_selection {\"op\":\"add\",\"paths\":$SELECT_JSON,\"mode\":\"full\"}"
 fi

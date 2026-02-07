@@ -17,8 +17,8 @@ Usage:
 Checks:
   - Repo Prompt running + MCP enabled
   - rp-cli available
-  - Single window or explicit window selected
-  - Tab exists
+  - Window routing validity (no -w required for single-window setups)
+  - Tab exists in the targeted window
 
 Environment defaults:
   RP_WINDOW (optional), RP_TAB (default: T1), RP_WORKSPACE (default: GitHub)
@@ -45,24 +45,53 @@ if [[ -z "$WINDOW" ]]; then WINDOW="$DEFAULT_WINDOW"; fi
 if [[ -z "$TAB" ]]; then TAB="$DEFAULT_TAB"; fi
 if [[ -z "$WORKSPACE" ]]; then WORKSPACE="$DEFAULT_WORKSPACE"; fi
 
-# Basic connectivity (Repo Prompt running + MCP enabled)
-if ! TABS_OUT=$(rp-cli -e 'tabs' 2>&1); then
+# Check windows first (connectivity + routing constraints)
+WIN_OUT=$(rp-cli -e 'windows' 2>&1 || true)
+if [[ -z "$WIN_OUT" ]]; then
   echo "Repo Prompt not running or MCP Server disabled." >&2
-  echo "$TABS_OUT" >&2
   exit 1
 fi
 
-# Multi-window check
-WIN_OUT=$(rp-cli -e 'windows' 2>&1 || true)
-if ! echo "$WIN_OUT" | grep -qi 'single-window mode'; then
-  if [[ -z "$WINDOW" ]]; then
-    echo "Multiple Repo Prompt windows detected. Set RP_WINDOW or pass -w." >&2
+WIN_COUNT=$(printf '%s\n' "$WIN_OUT" | sed -nE 's/.*Count[^0-9]*([0-9]+).*/\1/p' | head -n1)
+WINDOW_IDS=$(printf '%s\n' "$WIN_OUT" | sed -nE 's/.*Window `?([0-9]+)`?.*/\1/p')
+
+if [[ -z "$WIN_COUNT" ]]; then
+  if [[ -n "$WINDOW_IDS" ]]; then
+    WIN_COUNT=$(printf '%s\n' "$WINDOW_IDS" | sed '/^$/d' | wc -l | tr -d ' ')
+  else
+    WIN_COUNT=1
+  fi
+fi
+
+if [[ "$WIN_COUNT" -gt 1 && -z "$WINDOW" ]]; then
+  echo "Multiple Repo Prompt windows detected. Set RP_WINDOW or pass -w." >&2
+  echo "$WIN_OUT" >&2
+  exit 2
+fi
+
+if [[ -n "$WINDOW" && -n "$WINDOW_IDS" ]]; then
+  if ! printf '%s\n' "$WINDOW_IDS" | grep -qx "$WINDOW"; then
+    echo "Window '$WINDOW' not found." >&2
     echo "$WIN_OUT" >&2
     exit 2
   fi
 fi
 
-# Tab check
+# Tab check in the targeted window
+if [[ -n "$WINDOW" ]]; then
+  if ! TABS_OUT=$(rp-cli -w "$WINDOW" -e 'tabs' 2>&1); then
+    echo "Repo Prompt not running or MCP Server disabled." >&2
+    echo "$TABS_OUT" >&2
+    exit 1
+  fi
+else
+  if ! TABS_OUT=$(rp-cli -e 'tabs' 2>&1); then
+    echo "Repo Prompt not running or MCP Server disabled." >&2
+    echo "$TABS_OUT" >&2
+    exit 1
+  fi
+fi
+
 if ! echo "$TABS_OUT" | grep -q "• $TAB"; then
   echo "Tab '$TAB' not found. Available tabs:" >&2
   echo "$TABS_OUT" >&2
