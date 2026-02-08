@@ -56,6 +56,22 @@ Useful wrappers:
 - `skills/repoprompt/scripts/rpflow.sh autopilot --profile fast --select-set repo/src/ --task "draft plan" --out /tmp/plan.md --retry-on-timeout --fallback-export-on-timeout`
 - `skills/repoprompt/scripts/report-summary.sh /tmp/rpflow-*.json`
 
+## Suggested AGENTS.md / MEMORY.md / TOOLS.md snippets
+
+Add these minimal lines in your OpenClaw workspace docs if you want rpflow-first repo automation behavior.
+
+AGENTS.md (repo rule):
+- Use Repo Prompt via rpflow first for any repo planning/reading/searching/editing task.
+- Run `PYTHONPATH=src python3 -m rpflow.cli smoke --workspace GitHub --tab T1 --profile fast --report-json /tmp/rpflow-smoke.json` before major repo automation.
+
+MEMORY.md (long-term defaults):
+- Default repo profile: `--profile normal`; use `fast` for quick checks and `deep` for large/complex runs.
+- For builder flows prefer `--retry-on-timeout --fallback-export-on-timeout`; add `--report-json` and optionally `--resume-from-export`.
+
+TOOLS.md (operator runbook):
+- Set `RP_PROFILE=normal` (or `fast`/`deep`) for wrapper defaults.
+- Use `skills/repoprompt/scripts/report-summary.sh /tmp/rpflow-*.json` to triage failures quickly.
+
 ## Troubleshooting
 - `rp-cli not found in PATH`
   - Install from Repo Prompt MCP settings.
@@ -68,6 +84,7 @@ Useful wrappers:
 - No secrets are committed by this skill.
 - rpflow report JSON can include output tails; treat reports as local diagnostics.
 - Runtime state files should stay local/ignored unless explicitly required.
+- Public-share check: repository content is path-generalized and contains no API keys/tokens/passwords.
 
 ## License
 MIT (see LICENSE).

@@ -6,7 +6,7 @@ set -euo pipefail
 # during first-time workspace creation there may be no target workspace yet.
 # After bootstrap, use rpflow-first scripts for all normal operations.
 
-ROOT="$HOME/Documents/github"
+ROOT="${RP_GITHUB_ROOT:-$HOME/Documents/github}"
 WORKSPACE_NAME="GitHub"
 
 if ! command -v rp-cli >/dev/null 2>&1; then

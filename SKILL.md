@@ -1,7 +1,7 @@
 ---
 name: repoprompt
 description: Automate Repo Prompt (MCP + rp-cli) for context building, file selection, chat_send, edits, and exports. Use for any repository planning/reading/searching/editing/refactor/review workflow; prefer rpflow for stable routing/timeouts and use raw rp-cli for direct debugging.
-metadata: {"clawdbot": {"permissions": ["filesystem:$HOME/Documents/github", "mcp"]}}
+metadata: {"clawdbot": {"permissions": ["filesystem:/Users", "mcp"]}}
 ---
 
 # Repo Prompt Automation (rpflow + rp-cli)
@@ -55,7 +55,7 @@ PYTHONPATH=src python3 -m rpflow.cli autopilot --workspace GitHub --tab T1 --sel
 PYTHONPATH=src python3 -m rpflow.cli autopilot --workspace GitHub --tab T1 --select-set repo/src/ --task "draft plan" --out /tmp/plan.md --report-json /tmp/rpflow-run.json
 PYTHONPATH=src python3 -m rpflow.cli plan-export --workspace GitHub --tab T1 --select-set repo/src/ --task "draft plan" --out /tmp/plan.md --resume-from-export /tmp/last-known-good.md
 PYTHONPATH=src python3 -m rpflow.cli autopilot --workspace GitHub --tab T1 --profile fast --select-set repo/src/ --task "draft plan" --out /tmp/plan.md --retry-on-timeout --fallback-export-on-timeout
-bash $HOME/clawd/skills/repoprompt/scripts/report-summary.sh /tmp/rpflow-run.json
+bash "$HOME/clawd/skills/repoprompt/scripts/report-summary.sh" /tmp/rpflow-run.json
 
 # Deterministic runs (CI-like): explicit routing required
 PYTHONPATH=src python3 -m rpflow.cli exec --strict --window 1 --tab T1 --workspace GitHub -e 'tabs'
@@ -104,6 +104,13 @@ cat edits.json | rp-cli -w 1 -t T1 -c apply_edits -j @-
 - For auditability, add `--report-json /path/report.json` on critical runs.
 - Optional: use `--resume-from-export /tmp/last-known-good.md` for degraded recovery.
 - Treat timeout as a normal operational state, not a silent success.
+
+## Workspace docs integration (AGENTS/MEMORY/TOOLS)
+
+If you want this skill to be first-class in an OpenClaw workspace, keep these minimal snippets:
+- AGENTS.md: use rpflow first for repo tasks; run `rpflow smoke --profile fast --report-json /tmp/rpflow-smoke.json` before major automation.
+- MEMORY.md: default `--profile normal`; for builder flows prefer `--retry-on-timeout --fallback-export-on-timeout`; add `--report-json`, optional `--resume-from-export`.
+- TOOLS.md: set `RP_PROFILE` default and use `scripts/report-summary.sh /tmp/rpflow-*.json` for triage.
 
 ## Scripts in this skill
 
