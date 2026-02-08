@@ -76,6 +76,8 @@ TOOLS.md (operator runbook):
 - `rp-cli not found in PATH`
   - Install from Repo Prompt MCP settings.
 - tab/window routing errors
+  - Run `scripts/preflight.sh` first (auto-selects when exactly one window exists).
+  - If multiple windows are open, set `-w <window_id>` or `RP_WINDOW`.
   - Run `rpflow.sh exec -e 'tabs'` and target valid tab/window.
 - builder stalls/timeouts
   - Use profile+retry+fallback, and optionally `--resume-from-export`.
