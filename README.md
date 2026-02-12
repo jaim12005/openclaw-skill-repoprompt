@@ -61,6 +61,7 @@ Useful wrappers:
 - `skills/repoprompt/scripts/rpflow.sh exec -e 'tabs'`
 - `skills/repoprompt/scripts/rpflow.sh autopilot --select-set repo/src/ --task "draft plan" --out /tmp/plan.md --fallback-export-on-timeout`
 - `skills/repoprompt/scripts/rpflow.sh autopilot --profile fast --select-set repo/src/ --task "draft plan" --out /tmp/plan.md --retry-on-timeout --fallback-export-on-timeout`
+- `skills/repoprompt/scripts/agent-safe.sh --workspace GitHub --tab T1 --select-set "repo/src/" --task "implement X safely" --out /tmp/rp-agent-safe.md --reasoning medium --mode plan`
 - `skills/repoprompt/scripts/report-summary.sh /tmp/rpflow-*.json`
 
 ## Suggested AGENTS.md / MEMORY.md / TOOLS.md snippets
@@ -81,6 +82,11 @@ TOOLS.md (operator runbook):
 - Set `RP_PROFILE=normal` (or `fast`/`deep`) for wrapper defaults.
 - Add Repo Prompt 2.0 Agent defaults (provider, reasoning, approval policy).
 - Use `skills/repoprompt/scripts/report-summary.sh /tmp/rpflow-*.json` to triage failures quickly.
+
+## Agent-safe wrapper (new)
+- `scripts/agent-safe.sh` is a one-command wrapper for Repo Prompt Agent 2.0 sessions.
+- It runs preflight + plan-export (retry/fallback), sets a safety policy prompt, and optionally starts a new chat.
+- Defaults: Codex-first model preset (`current_chat_model`), reasoning `medium`, mode `plan`.
 
 ## Troubleshooting
 - `rp-cli not found in PATH`

@@ -25,6 +25,7 @@ Recommended scripts:
 - scripts/preflight.sh (fast validation)
 - bash scripts/context-flow.sh (full flow: anchor + builder + codemap + slices + export)
 - bash scripts/plan-export.sh (plan + export)
+- scripts/agent-safe.sh (plan-export + Agent safety prompt + optional chat kickoff)
 - scripts/export-prompt.sh (selection + export)
 
 Examples:
@@ -33,6 +34,9 @@ Examples:
 
 - Plan-only export:
   bash scripts/plan-export.sh --workspace Clawdbot     --select-set "skills/repoprompt/"     --task "Add hybrid rpflow + Agent Mode guidance"     --out /tmp/rp-plan.md
+
+- Agent-safe kickoff (recommended for risky work):
+  bash scripts/agent-safe.sh --workspace Clawdbot --tab T1     --select-set "skills/repoprompt/,AGENTS.md"     --task "Propose and implement docs updates with safe review checkpoints"     --out /tmp/rp-agent-safe.md     --reasoning medium --mode plan
 
 Notes:
 - If multiple Repo Prompt windows are open, set RP_WINDOW or pass -w to scripts.

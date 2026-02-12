@@ -59,6 +59,14 @@ bash "$HOME/clawd/skills/repoprompt/scripts/report-summary.sh" /tmp/rpflow-run.j
 
 # Deterministic runs (CI-like): explicit routing required
 PYTHONPATH=src python3 -m rpflow.cli exec --strict --window 1 --tab T1 --workspace GitHub -e 'tabs'
+
+# Agent-safe kickoff wrapper (Repo Prompt 2.0)
+bash "$HOME/clawd/skills/repoprompt/scripts/agent-safe.sh" \
+  --workspace GitHub --tab T1 \
+  --select-set "repo/src/,repo/README.md" \
+  --task "Implement feature X with a safe edit plan" \
+  --out /tmp/rp-agent-safe.md \
+  --reasoning medium --mode plan
 ```
 
 ## Repo Prompt 2.0 integration (Agent Mode)
@@ -143,6 +151,7 @@ If you want this skill to be first-class in an OpenClaw workspace, keep these mi
 - scripts/export-prompt.sh: rpflow export wrapper.
 - scripts/plan-export.sh: rpflow autopilot wrapper (preflight + plan-export + fallback).
 - scripts/context-flow.sh: end-to-end flow with codemap/slices via rpflow exec.
+- scripts/agent-safe.sh: preflight + plan-export + safety prompt + new Agent chat kickoff (Codex-first policy wrapper).
 - scripts/report-summary.sh: concise reader for rpflow --report-json outputs.
 - scripts/bootstrap-github.sh: one-time workspace bootstrap (raw rp-cli exception for first-time workspace creation).
 
