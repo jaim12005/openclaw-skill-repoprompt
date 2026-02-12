@@ -1,6 +1,6 @@
 ---
 name: repoprompt
-description: Automate Repo Prompt (MCP + rp-cli) for context building, file selection, chat_send, edits, and exports. Use for any repository planning/reading/searching/editing/refactor/review workflow; prefer rpflow for stable routing/timeouts and use raw rp-cli for direct debugging.
+description: Automate Repo Prompt (rpflow + MCP + Agent Mode) for context building, file selection, chat_send, edits, and exports. Use for any repository planning/reading/searching/editing/refactor/review workflow; prefer rpflow for stable deterministic routing and use Repo Prompt Agent for interactive coding loops.
 metadata: {"clawdbot": {"permissions": ["filesystem:/Users", "mcp"]}}
 ---
 
@@ -61,6 +61,19 @@ bash "$HOME/clawd/skills/repoprompt/scripts/report-summary.sh" /tmp/rpflow-run.j
 PYTHONPATH=src python3 -m rpflow.cli exec --strict --window 1 --tab T1 --workspace GitHub -e 'tabs'
 ```
 
+## Repo Prompt 2.0 integration (Agent Mode)
+
+Use a hybrid operating model:
+- rpflow first: deterministic routing, context curation, plan/export artifacts.
+- Repo Prompt Agent second: interactive implementation/refactor loops in-app.
+
+Recommended Agent defaults on this machine:
+- Provider: Codex first (native integration), Claude Code/Gemini as fallback (beta caveats).
+- Reasoning effort: low for quick scans, medium default, high for multi-file or architecture-heavy work.
+- Tool preferences: keep write-capable tools constrained to task scope.
+- Approval/edit review: enable for risky, broad, or potentially destructive edits.
+- Session handling: prefer resumable threads; keep rpflow exports as reproducible source of truth.
+
 ## Key concepts
 
 - Selection is context: Repo Prompt chat/tools operate on current selection.
@@ -77,7 +90,11 @@ For any repo request (debugging, feature work, refactor, PR review):
 3) Build a tight selection (folders/files/slices/codemap_only).
 4) Use builder for discovery/plan/review when needed.
 5) Export prompt/context for reproducibility.
-6) Apply edits with JSON-first calls (`apply_edits` / `file_actions`) when possible.
+6) Choose execution lane:
+   - Deterministic lane: apply structured edits via `apply_edits` / `file_actions`.
+   - Interactive lane: open Repo Prompt Agent (Codex preferred), set reasoning/tool/approval policy, and iterate in-session.
+7) For high-risk changes, require edit review before apply.
+8) Keep final prompt/export artifacts for auditability and handoff.
 
 ## Raw rp-cli recipes (debug/direct use)
 
@@ -105,12 +122,18 @@ cat edits.json | rp-cli -w 1 -t T1 -c apply_edits -j @-
 - Optional: use `--resume-from-export /tmp/last-known-good.md` for degraded recovery.
 - Treat timeout as a normal operational state, not a silent success.
 
+## Agent Mode caveats (2.0)
+
+- Claude Code/Gemini agent sessions are beta; prefer Codex for longer or mission-critical runs.
+- Keep long-running agent sessions checkpointed with periodic exports.
+- For sensitive branches or broad edits, turn on edit review and keep a single writer.
+
 ## Workspace docs integration (AGENTS/MEMORY/TOOLS)
 
 If you want this skill to be first-class in an OpenClaw workspace, keep these minimal snippets:
-- AGENTS.md: use rpflow first for repo tasks; run `rpflow smoke --profile fast --report-json /tmp/rpflow-smoke.json` before major automation.
-- MEMORY.md: default `--profile normal`; for builder flows prefer `--retry-on-timeout --fallback-export-on-timeout`; add `--report-json`, optional `--resume-from-export`.
-- TOOLS.md: set `RP_PROFILE` default and use `scripts/report-summary.sh /tmp/rpflow-*.json` for triage.
+- AGENTS.md: use rpflow first for repo tasks; run `rpflow smoke --profile fast --report-json /tmp/rpflow-smoke.json` before major automation; then use Repo Prompt Agent for interactive loops when needed.
+- MEMORY.md: default `--profile normal`; for builder flows prefer `--retry-on-timeout --fallback-export-on-timeout`; add `--report-json`, optional `--resume-from-export`; record Agent defaults (Codex-first + reasoning/edit-review policy).
+- TOOLS.md: set `RP_PROFILE` default, document Agent Mode defaults, and use `scripts/report-summary.sh /tmp/rpflow-*.json` for triage.
 
 ## Scripts in this skill
 

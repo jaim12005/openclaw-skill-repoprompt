@@ -22,7 +22,7 @@ Usage:
 Notes:
   - PATHS is a comma-separated list (e.g. repo/,src/,README.md)
   - Runs rpflow autopilot (preflight + builder plan + prompt export)
-  - Includes timeout fallback export by default
+  - Includes retry-on-timeout and fallback export by default
   - Defaults: RP_WINDOW (optional), RP_TAB (or T1), RP_WORKSPACE (or GitHub)
 USAGE
 }
@@ -50,7 +50,7 @@ if [[ -z "$WORKSPACE" || -z "$SELECT_SET" || -z "$TASK" || -z "$OUT" ]]; then
   exit 2
 fi
 
-ARGS=(autopilot --select-set "$SELECT_SET" --task "$TASK" --out "$OUT" --fallback-export-on-timeout)
+ARGS=(autopilot --select-set "$SELECT_SET" --task "$TASK" --out "$OUT" --retry-on-timeout --fallback-export-on-timeout)
 if [[ -n "$WINDOW" ]]; then ARGS+=(--window "$WINDOW"); fi
 if [[ -n "$TAB" ]]; then ARGS+=(--tab "$TAB"); fi
 if [[ -n "$WORKSPACE" ]]; then ARGS+=(--workspace "$WORKSPACE"); fi

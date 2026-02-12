@@ -1,10 +1,11 @@
 # OpenClaw Skill: repoprompt
 
 ## Overview
-Automate Repo Prompt (MCP + rp-cli) for context building, file selection, chat_send, edits, and exports.
+Automate Repo Prompt (rpflow + MCP + Agent Mode) for context building, file selection, chat_send, edits, and exports.
 
-This skill is rpflow-first:
-- rpflow is the default orchestration interface
+This skill is hybrid and rpflow-first:
+- rpflow is the deterministic orchestration interface (routing, selection, exports)
+- Repo Prompt Agent (2.0) is the interactive coding loop
 - raw rp-cli is fallback/debug only
 - most wrappers in scripts/ delegate to rpflow
 - bootstrap-github.sh is the setup-time exception
@@ -19,6 +20,12 @@ This skill is rpflow-first:
 Optional env defaults:
 - RP_WORKSPACE, RP_TAB, RP_WINDOW
 - RP_PROFILE (fast|normal|deep; default normal)
+
+## Repo Prompt 2.0 defaults (recommended)
+- Provider: Codex first (native integration), Claude Code/Gemini fallback when needed.
+- Reasoning effort: low (quick scans), medium (default), high (complex multi-file work).
+- Approval/edit review: enable for risky/destructive/broad edits.
+- Artifact discipline: keep rpflow exports as reproducible checkpoints for agent sessions.
 
 ## Install (OpenClaw)
 1) Clone this repo into ~/clawd/skills/repoprompt (or ~/.openclaw/skills/repoprompt).
@@ -47,7 +54,7 @@ skills/repoprompt/scripts/report-summary.sh /tmp/rpflow-plan.json
 ```
 
 ## Usage
-See SKILL.md for the operating model, command matrix, strict mode, timeout/fallback policy, and wrappers.
+See SKILL.md for the hybrid operating model (rpflow deterministic + Agent interactive), command matrix, strict mode, timeout/fallback policy, and wrappers.
 
 Useful wrappers:
 - `skills/repoprompt/scripts/rpflow.sh smoke`
@@ -63,13 +70,16 @@ Add these minimal lines in your OpenClaw workspace docs if you want rpflow-first
 AGENTS.md (repo rule):
 - Use Repo Prompt via rpflow first for any repo planning/reading/searching/editing task.
 - Run `PYTHONPATH=src python3 -m rpflow.cli smoke --workspace GitHub --tab T1 --profile fast --report-json /tmp/rpflow-smoke.json` before major repo automation.
+- After export, use Repo Prompt Agent (2.0) for interactive loops when useful; keep edit review on for risky writes.
 
 MEMORY.md (long-term defaults):
 - Default repo profile: `--profile normal`; use `fast` for quick checks and `deep` for large/complex runs.
 - For builder flows prefer `--retry-on-timeout --fallback-export-on-timeout`; add `--report-json` and optionally `--resume-from-export`.
+- Record Agent defaults (Codex-first + reasoning effort + approval/edit-review policy).
 
 TOOLS.md (operator runbook):
 - Set `RP_PROFILE=normal` (or `fast`/`deep`) for wrapper defaults.
+- Add Repo Prompt 2.0 Agent defaults (provider, reasoning, approval policy).
 - Use `skills/repoprompt/scripts/report-summary.sh /tmp/rpflow-*.json` to triage failures quickly.
 
 ## Troubleshooting
@@ -81,6 +91,9 @@ TOOLS.md (operator runbook):
   - Run `rpflow.sh exec -e 'tabs'` and target valid tab/window.
 - builder stalls/timeouts
   - Use profile+retry+fallback, and optionally `--resume-from-export`.
+- agent session instability (2.0)
+  - Prefer Codex for long sessions; treat Claude/Gemini as beta.
+  - Keep periodic exports/checkpoints and require edit review for risky changes.
 
 ## Security and privacy
 - No secrets are committed by this skill.
