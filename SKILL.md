@@ -23,6 +23,11 @@ Use this skill when you need to drive the Repo Prompt macOS app programmatically
 - Window selection: with one window, -w is optional; set RP_WINDOW (or pass -w) when multiple windows are open
 - Preferred orchestrator repo: $HOME/Documents/github/repoprompt-rpflow-cli
 
+Workspace strategy on this machine:
+- Use `GitHub` for repos rooted under `$HOME/Documents/github`.
+- Use dedicated workspaces for repos outside that root (for example `OpenClawWorkspace`, `RepoPromptSkill`, `BraveSkill`, `RPFlowCLI`).
+- This matters because Repo Prompt will not resolve files outside the currently loaded workspace root; gitignored skill repos under `~/.openclaw/workspace/skills` are a common trap.
+
 Environment overrides:
 - RP_WORKSPACE (default: GitHub)
 - RP_TAB (default: T1)
@@ -55,13 +60,13 @@ PYTHONPATH=src python3 -m rpflow.cli autopilot --workspace GitHub --tab T1 --sel
 PYTHONPATH=src python3 -m rpflow.cli autopilot --workspace GitHub --tab T1 --select-set repo/src/ --task "draft plan" --out /tmp/plan.md --report-json /tmp/rpflow-run.json
 PYTHONPATH=src python3 -m rpflow.cli plan-export --workspace GitHub --tab T1 --select-set repo/src/ --task "draft plan" --out /tmp/plan.md --resume-from-export /tmp/last-known-good.md
 PYTHONPATH=src python3 -m rpflow.cli autopilot --workspace GitHub --tab T1 --profile fast --select-set repo/src/ --task "draft plan" --out /tmp/plan.md --retry-on-timeout --fallback-export-on-timeout
-bash "$HOME/clawd/skills/repoprompt/scripts/report-summary.sh" /tmp/rpflow-run.json
+bash "$HOME/.openclaw/workspace/skills/repoprompt/scripts/report-summary.sh" /tmp/rpflow-run.json
 
 # Deterministic runs (CI-like): explicit routing required
 PYTHONPATH=src python3 -m rpflow.cli exec --strict --window 1 --tab T1 --workspace GitHub -e 'tabs'
 
 # Agent-safe kickoff wrapper (Repo Prompt 2.0)
-bash "$HOME/clawd/skills/repoprompt/scripts/agent-safe.sh" \
+bash "$HOME/.openclaw/workspace/skills/repoprompt/scripts/agent-safe.sh" \
   --workspace GitHub --tab T1 \
   --select-set "repo/src/,repo/README.md" \
   --task "Implement feature X with a safe edit plan" \
@@ -95,6 +100,8 @@ Recommended Agent defaults on this machine:
 For any repo request (debugging, feature work, refactor, PR review):
 1) Ensure routing is healthy (`rpflow smoke` or `scripts/preflight.sh`).
 2) Switch to the right workspace/tab.
+   - If the repo is under `$HOME/Documents/github`, `GitHub` is usually right.
+   - If the repo lives under `~/.openclaw/workspace` or `~/.openclaw/workspace/skills`, use a dedicated workspace for that repo/root instead of assuming `GitHub`.
 3) Build a tight selection (folders/files/slices/codemap_only).
 4) Use builder for discovery/plan/review when needed.
 5) Export prompt/context for reproducibility.

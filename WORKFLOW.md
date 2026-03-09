@@ -1,13 +1,18 @@
-Repo Prompt default workflow (Clawdbot)
+Repo Prompt default workflow (OpenClaw)
 
 Goal: start repo work with deterministic context curation in Repo Prompt (selection + codemaps/slices + export), then run either deterministic edits or interactive Agent Mode (2.0) with clear approval policy.
 
 Preflight (required):
 1) Set deterministic defaults (env vars):
-   - RP_WORKSPACE (e.g. Clawdbot or GitHub)
-   - RP_TAB (e.g. T1/T3)
+   - RP_WORKSPACE (for example GitHub, OpenClawWorkspace, RepoPromptSkill, RPFlowCLI)
+   - RP_TAB (for example T1/T3)
    - RP_WINDOW (optional, required if multiple windows are open)
 2) Run bash scripts/preflight.sh to verify Repo Prompt + MCP + tab/window.
+
+Workspace choice rule:
+- Use GitHub for repos rooted under ~/Documents/github
+- Use a dedicated Repo Prompt workspace for repos outside that root
+- Skill repos under ~/.openclaw/workspace/skills are a common case where a dedicated workspace is cleaner than assuming GitHub
 
 Core flow:
 1) Anchor selection (small, full content)
@@ -29,14 +34,26 @@ Recommended scripts:
 - scripts/export-prompt.sh (selection + export)
 
 Examples:
-- Full flow (recommended):
-  bash scripts/context-flow.sh --workspace Clawdbot     --select-set "skills/repoprompt/,AGENTS.md"     --task "Review Repo Prompt automation wrappers"     --codemap "skills/repoprompt/scripts"     --slice "skills/repoprompt/WORKFLOW.md:1-80:workflow"     --out /tmp/rp-context.md
+- Full flow on the OpenClaw workspace root:
+  bash scripts/context-flow.sh --workspace OpenClawWorkspace \
+    --select-set "AGENTS.md,skills/repoprompt/" \
+    --task "Review Repo Prompt automation wrappers" \
+    --codemap "skills/repoprompt/scripts" \
+    --slice "skills/repoprompt/WORKFLOW.md:1-120:workflow" \
+    --out /tmp/rp-context.md
 
-- Plan-only export:
-  bash scripts/plan-export.sh --workspace Clawdbot     --select-set "skills/repoprompt/"     --task "Add hybrid rpflow + Agent Mode guidance"     --out /tmp/rp-plan.md
+- Plan-only export on the repoprompt skill repo itself:
+  bash scripts/plan-export.sh --workspace RepoPromptSkill \
+    --select-set "README.md,SKILL.md,scripts/" \
+    --task "Add hybrid rpflow + Agent Mode guidance" \
+    --out /tmp/rp-plan.md
 
 - Agent-safe kickoff (recommended for risky work):
-  bash scripts/agent-safe.sh --workspace Clawdbot --tab T1     --select-set "skills/repoprompt/,AGENTS.md"     --task "Propose and implement docs updates with safe review checkpoints"     --out /tmp/rp-agent-safe.md     --reasoning medium --mode plan
+  bash scripts/agent-safe.sh --workspace RepoPromptSkill --tab T1 \
+    --select-set "README.md,SKILL.md,WORKFLOW.md,scripts/" \
+    --task "Propose and implement docs updates with safe review checkpoints" \
+    --out /tmp/rp-agent-safe.md \
+    --reasoning medium --mode plan
 
 Notes:
 - If multiple Repo Prompt windows are open, set RP_WINDOW or pass -w to scripts.

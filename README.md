@@ -21,6 +21,11 @@ Optional env defaults:
 - RP_WORKSPACE, RP_TAB, RP_WINDOW
 - RP_PROFILE (fast|normal|deep; default normal)
 
+Workspace strategy on this machine:
+- `GitHub` is the normal default for repos under `~/Documents/github`.
+- Repos outside that root should get their own Repo Prompt workspace (for example `OpenClawWorkspace`, `RepoPromptSkill`, `BraveSkill`, `RPFlowCLI`).
+- This is especially important for skill repos under `~/.openclaw/workspace/skills`, because they may not resolve from the broader OpenClaw workspace root.
+
 ## Repo Prompt 2.0 defaults (recommended)
 - Provider: Codex first (native integration), Claude Code/Gemini fallback when needed.
 - Reasoning effort: low (quick scans), medium (default), high (complex multi-file work).
@@ -62,6 +67,7 @@ Useful wrappers:
 - `skills/repoprompt/scripts/rpflow.sh autopilot --select-set repo/src/ --task "draft plan" --out /tmp/plan.md --fallback-export-on-timeout`
 - `skills/repoprompt/scripts/rpflow.sh autopilot --profile fast --select-set repo/src/ --task "draft plan" --out /tmp/plan.md --retry-on-timeout --fallback-export-on-timeout`
 - `skills/repoprompt/scripts/agent-safe.sh --workspace GitHub --tab T1 --select-set "repo/src/" --task "implement X safely" --out /tmp/rp-agent-safe.md --reasoning medium --mode plan`
+- For OpenClaw skill repos, prefer a dedicated workspace name (for example `RepoPromptSkill`) instead of forcing `GitHub`.
 - `skills/repoprompt/scripts/report-summary.sh /tmp/rpflow-*.json`
 
 ## Suggested AGENTS.md / MEMORY.md / TOOLS.md snippets
