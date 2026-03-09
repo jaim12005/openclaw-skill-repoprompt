@@ -12,6 +12,8 @@ This skill is hybrid and rpflow-first:
 
 ## Requirements
 - OpenClaw 2026.2.x (or newer in same compatibility band)
+- macOS (Repo Prompt app)
+- python3
 - Repo Prompt app running
 - MCP Server enabled in Repo Prompt settings
 - rp-cli on PATH
@@ -33,19 +35,26 @@ Workspace strategy on this machine:
 - Artifact discipline: keep rpflow exports as reproducible checkpoints for agent sessions.
 
 ## Install (OpenClaw)
-1) Clone this repo into ~/.openclaw/workspace/skills/repoprompt (or ~/.openclaw/skills/repoprompt).
+1) Clone this repo into `~/.openclaw/workspace/skills/repoprompt` for workspace-local install, or `~/.openclaw/skills/repoprompt` for shared install.
 2) Enable MCP Server in Repo Prompt and install rp-cli to PATH.
-3) Restart the OpenClaw gateway.
+3) Ensure the rpflow repo exists at `$HOME/Documents/github/repoprompt-rpflow-cli` (or set `RPFLOW_REPO`).
+4) Start a new session after install so the skill is available in fresh context.
+
+## Quick sanity checks
+```bash
+bash scripts/smoke.sh
+bash scripts/smoke.sh --offline
+```
 
 ## 2-minute quickstart (community)
 
 ```bash
 # 1) Smoke check
-skills/repoprompt/scripts/rpflow.sh smoke --report-json /tmp/rpflow-smoke.json
+./scripts/rpflow.sh smoke --report-json /tmp/rpflow-smoke.json
 # expected: tabs: ok / context: ok / tools-schema: ok
 
 # 2) End-to-end plan/export
-skills/repoprompt/scripts/rpflow.sh autopilot \
+./scripts/rpflow.sh autopilot \
   --profile fast \
   --select-set repo/src/ \
   --task "draft plan" \
@@ -55,20 +64,20 @@ skills/repoprompt/scripts/rpflow.sh autopilot \
   --report-json /tmp/rpflow-plan.json
 
 # 3) Read compact status
-skills/repoprompt/scripts/report-summary.sh /tmp/rpflow-plan.json
+./scripts/report-summary.sh /tmp/rpflow-plan.json
 ```
 
 ## Usage
 See SKILL.md for the hybrid operating model (rpflow deterministic + Agent interactive), command matrix, strict mode, timeout/fallback policy, and wrappers.
 
 Useful wrappers:
-- `skills/repoprompt/scripts/rpflow.sh smoke`
-- `skills/repoprompt/scripts/rpflow.sh exec -e 'tabs'`
-- `skills/repoprompt/scripts/rpflow.sh autopilot --select-set repo/src/ --task "draft plan" --out /tmp/plan.md --fallback-export-on-timeout`
-- `skills/repoprompt/scripts/rpflow.sh autopilot --profile fast --select-set repo/src/ --task "draft plan" --out /tmp/plan.md --retry-on-timeout --fallback-export-on-timeout`
-- `skills/repoprompt/scripts/agent-safe.sh --workspace GitHub --tab T1 --select-set "repo/src/" --task "implement X safely" --out /tmp/rp-agent-safe.md --reasoning medium --mode plan`
+- `./scripts/rpflow.sh smoke`
+- `./scripts/rpflow.sh exec -e 'tabs'`
+- `./scripts/rpflow.sh autopilot --select-set repo/src/ --task "draft plan" --out /tmp/plan.md --fallback-export-on-timeout`
+- `./scripts/rpflow.sh autopilot --profile fast --select-set repo/src/ --task "draft plan" --out /tmp/plan.md --retry-on-timeout --fallback-export-on-timeout`
+- `./scripts/agent-safe.sh --workspace GitHub --tab T1 --select-set "repo/src/" --task "implement X safely" --out /tmp/rp-agent-safe.md --reasoning medium --mode plan`
 - For OpenClaw skill repos, prefer a dedicated workspace name (for example `RepoPromptSkill`) instead of forcing `GitHub`.
-- `skills/repoprompt/scripts/report-summary.sh /tmp/rpflow-*.json`
+- `./scripts/report-summary.sh /tmp/rpflow-*.json`
 
 ## Suggested AGENTS.md / MEMORY.md / TOOLS.md snippets
 
@@ -87,7 +96,7 @@ MEMORY.md (long-term defaults):
 TOOLS.md (operator runbook):
 - Set `RP_PROFILE=normal` (or `fast`/`deep`) for wrapper defaults.
 - Add Repo Prompt 2.0 Agent defaults (provider, reasoning, approval policy).
-- Use `skills/repoprompt/scripts/report-summary.sh /tmp/rpflow-*.json` to triage failures quickly.
+- Use `./scripts/report-summary.sh /tmp/rpflow-*.json` to triage failures quickly.
 
 ## Agent-safe wrapper (new)
 - `scripts/agent-safe.sh` is a one-command wrapper for Repo Prompt Agent 2.0 sessions.

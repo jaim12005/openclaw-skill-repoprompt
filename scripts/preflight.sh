@@ -4,6 +4,10 @@ set -euo pipefail
 WINDOW=""
 TAB=""
 WORKSPACE=""
+PROFILE="${RP_PROFILE:-normal}"
+TIMEOUT=""
+REPORT_JSON=""
+STRICT=0
 
 DEFAULT_WINDOW="${RP_WINDOW:-}"
 DEFAULT_TAB="${RP_TAB:-T1}"
@@ -15,6 +19,8 @@ usage() {
   cat <<'USAGE'
 Usage:
   preflight.sh [-w WINDOW_ID] [-t TAB] [--workspace NAME]
+               [--profile fast|normal|deep] [--timeout SECONDS]
+               [--report-json FILE] [--strict]
 
 Checks:
   - rpflow available (via scripts/rpflow.sh)
@@ -26,7 +32,8 @@ Behavior:
   - If multiple windows are found, exits with guidance to set -w / RP_WINDOW
 
 Environment defaults:
-  RP_WINDOW (optional), RP_TAB (default: T1), RP_WORKSPACE (default: GitHub)
+  RP_WINDOW (optional), RP_TAB (default: T1), RP_WORKSPACE (default: GitHub),
+  RP_PROFILE (default: normal)
 USAGE
 }
 
@@ -35,6 +42,10 @@ while [[ $# -gt 0 ]]; do
     -w|--window) WINDOW="$2"; shift 2 ;;
     -t|--tab) TAB="$2"; shift 2 ;;
     --workspace) WORKSPACE="$2"; shift 2 ;;
+    --profile) PROFILE="$2"; shift 2 ;;
+    --timeout) TIMEOUT="$2"; shift 2 ;;
+    --report-json) REPORT_JSON="$2"; shift 2 ;;
+    --strict) STRICT=1; shift ;;
     -h|--help) usage; exit 0 ;;
     *) echo "Unknown arg: $1" >&2; usage; exit 2 ;;
   esac
@@ -44,8 +55,13 @@ if [[ -z "$WINDOW" ]]; then WINDOW="$DEFAULT_WINDOW"; fi
 if [[ -z "$TAB" ]]; then TAB="$DEFAULT_TAB"; fi
 if [[ -z "$WORKSPACE" ]]; then WORKSPACE="$DEFAULT_WORKSPACE"; fi
 
+case "$PROFILE" in
+  fast|normal|deep) ;;
+  *) echo "Invalid --profile: $PROFILE (use fast|normal|deep)" >&2; exit 2 ;;
+esac
+
 auto_select_window_if_needed() {
-  if [[ -n "$WINDOW" ]]; then
+  if [[ -n "$WINDOW" || "$STRICT" -eq 1 ]]; then
     return 0
   fi
 
@@ -56,7 +72,21 @@ auto_select_window_if_needed() {
   fi
 
   local window_ids
-  window_ids="$(printf '%s\n' "$windows_out" | sed -nE 's/.*Window `([0-9]+)`.*/\1/p' | sort -u | tr '\n' ' ' | sed 's/[[:space:]]*$//')"
+  window_ids="$(WINDOWS_OUT="$windows_out" python3 - <<'PY'
+import os, re
+text = os.environ.get('WINDOWS_OUT', '')
+ids = []
+for line in text.splitlines():
+    m = re.search(r'Window `([0-9]+)`', line)
+    if m:
+        ids.append(m.group(1))
+seen = []
+for wid in ids:
+    if wid not in seen:
+        seen.append(wid)
+print(' '.join(seen))
+PY
+)"
 
   local count
   count="$(printf '%s\n' "$window_ids" | awk '{print NF}')"
@@ -79,11 +109,14 @@ auto_select_window_if_needed() {
 
 auto_select_window_if_needed || exit $?
 
-ARGS=(smoke --timeout 25)
+ARGS=(smoke --profile "$PROFILE")
+if [[ -n "$TIMEOUT" ]]; then ARGS+=(--timeout "$TIMEOUT"); fi
+if [[ -n "$REPORT_JSON" ]]; then ARGS+=(--report-json "$REPORT_JSON"); fi
+if [[ "$STRICT" -eq 1 ]]; then ARGS+=(--strict); fi
 if [[ -n "$WINDOW" ]]; then ARGS+=(--window "$WINDOW"); fi
 if [[ -n "$TAB" ]]; then ARGS+=(--tab "$TAB"); fi
 if [[ -n "$WORKSPACE" ]]; then ARGS+=(--workspace "$WORKSPACE"); fi
 
 "$SCRIPT_DIR/rpflow.sh" "${ARGS[@]}" >/dev/null
 
-echo "Repo Prompt OK via rpflow. window=${WINDOW:-auto} tab=$TAB workspace=$WORKSPACE" >&2
+echo "Repo Prompt OK via rpflow. window=${WINDOW:-auto} tab=$TAB workspace=$WORKSPACE profile=$PROFILE" >&2

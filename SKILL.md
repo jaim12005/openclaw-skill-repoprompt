@@ -1,7 +1,7 @@
 ---
 name: repoprompt
 description: Automate Repo Prompt (rpflow + MCP + Agent Mode) for context building, file selection, chat_send, edits, and exports. Use for any repository planning/reading/searching/editing/refactor/review workflow; prefer rpflow for stable deterministic routing and use Repo Prompt Agent for interactive coding loops.
-metadata: {"clawdbot": {"permissions": ["filesystem:/Users", "mcp"]}}
+metadata: {"clawdbot": {"emoji": "🧭", "os": ["darwin"], "requires": {"bins": ["python3", "rp-cli"]}, "permissions": ["filesystem:/Users", "mcp"]}}
 ---
 
 # Repo Prompt Automation (rpflow + rp-cli)

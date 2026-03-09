@@ -4,6 +4,14 @@
 - Replaced stale `$HOME/clawd/...` wrapper paths with the live `~/.openclaw/workspace/...` equivalents.
 - Updated workflow/docs to explain the real workspace strategy: use `GitHub` for repos under `~/Documents/github`, and dedicated Repo Prompt workspaces for repos under `~/.openclaw/workspace` / `skills/`.
 - Refreshed examples to use `OpenClawWorkspace`, `RepoPromptSkill`, and `RPFlowCLI` where appropriate.
+- Fixed `scripts/rpflow.sh` so zero-extra-arg commands like `rpflow.sh doctor` no longer fail under `set -u`.
+- Added `--help` handling to wrappers that previously made accidental execution too easy (`rpflow.sh`, `bootstrap-github.sh`, `report-summary.sh`).
+- Added `scripts/smoke.sh` plus offline-capable CI validation.
+- Updated readiness/install docs to reflect current OpenClaw behavior and Repo Prompt prerequisites.
+- Added profile/timeout/report/strict passthrough to preflight/plan-export/agent-safe wrappers.
+- Made `scripts/context-flow.sh` export atomically so failed runs no longer delete the previous artifact first.
+- Simplified `bootstrap-github.sh` to switch first and only create the workspace on a clear not-found failure.
+- Normalized README examples to repo-local `./scripts/...` invocation paths.
 
 ## 2026-02-11
 - Integrated Repo Prompt 2.0 guidance across skill docs.

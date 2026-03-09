@@ -9,6 +9,8 @@ CODEMAP_SET=""
 OUT=""
 TASK=""
 BUILDER_TYPE=""
+PROFILE="${RP_PROFILE:-normal}"
+PREFLIGHT_REPORT_JSON=""
 SLICE_SPECS=()
 
 DEFAULT_WINDOW="${RP_WINDOW:-}"
@@ -21,6 +23,7 @@ Usage:
   context-flow.sh [-w WINDOW_ID] [-t TAB] [--workspace NAME] \
     --select-set PATHS --out FILE \
     [--task TEXT] [--builder-type clarify|question|plan|review] \
+    [--profile fast|normal|deep] [--preflight-report-json FILE] \
     [--codemap PATHS] [--slice SPEC ...]
 
 Notes:
@@ -29,6 +32,7 @@ Notes:
   - --codemap adds codemap_only entries (reference context)
   - --slice format: path:start-end[:description]
   - Use multiple --slice flags for multiple ranges
+  - Export writes to a temp file and only replaces --out on success
 USAGE
 }
 
@@ -42,6 +46,8 @@ while [[ $# -gt 0 ]]; do
     --slice) SLICE_SPECS+=("$2"); shift 2;;
     --task) TASK="$2"; shift 2;;
     --builder-type) BUILDER_TYPE="$2"; shift 2;;
+    --profile) PROFILE="$2"; shift 2;;
+    --preflight-report-json) PREFLIGHT_REPORT_JSON="$2"; shift 2;;
     --out) OUT="$2"; shift 2;;
     -h|--help) usage; exit 0;;
     *) echo "Unknown arg: $1" >&2; usage; exit 2;;
@@ -65,8 +71,18 @@ if [[ -n "$BUILDER_TYPE" ]]; then
   esac
 fi
 
+case "$PROFILE" in
+  fast|normal|deep) ;;
+  *) echo "Invalid --profile: $PROFILE (use fast|normal|deep)" >&2; exit 2 ;;
+esac
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-bash "$SCRIPT_DIR/preflight.sh" ${WINDOW:+-w "$WINDOW"} ${TAB:+-t "$TAB"} --workspace "$WORKSPACE" >/dev/null
+PREFLIGHT_ARGS=()
+if [[ -n "$WINDOW" ]]; then PREFLIGHT_ARGS+=(--window "$WINDOW"); fi
+if [[ -n "$TAB" ]]; then PREFLIGHT_ARGS+=(--tab "$TAB"); fi
+PREFLIGHT_ARGS+=(--workspace "$WORKSPACE" --profile "$PROFILE")
+if [[ -n "$PREFLIGHT_REPORT_JSON" ]]; then PREFLIGHT_ARGS+=(--report-json "$PREFLIGHT_REPORT_JSON"); fi
+bash "$SCRIPT_DIR/preflight.sh" "${PREFLIGHT_ARGS[@]}" >/dev/null
 
 SELECT_JSON=$(SELECT_SET="$SELECT_SET" python3 - <<'PY'
 import json, os
@@ -107,7 +123,13 @@ print(json.dumps(slices))
 PY
 )
 
-rm -f "$OUT"
+OUT_DIR="$(dirname "$OUT")"
+mkdir -p "$OUT_DIR"
+TMP_OUT="$(mktemp "$OUT_DIR/.rpflow-export.XXXXXX.md")"
+cleanup() {
+  rm -f "$TMP_OUT"
+}
+trap cleanup EXIT
 
 CMD='call manage_selection {"op":"clear"}'
 if [[ "$SELECT_JSON" != "[]" ]]; then
@@ -130,12 +152,13 @@ if [[ "$SLICE_JSON" != "[]" ]]; then
   CMD+=" && call manage_selection {\"op\":\"add\",\"mode\":\"slices\",\"slices\":$SLICE_JSON}"
 fi
 
-CMD+=" && prompt export \"$OUT\""
+CMD+=" && prompt export \"$TMP_OUT\""
 
-RPF_ARGS=(exec -e "$CMD")
+RPF_ARGS=(exec --profile "$PROFILE" -e "$CMD")
 if [[ -n "$WINDOW" ]]; then RPF_ARGS+=(--window "$WINDOW"); fi
 if [[ -n "$TAB" ]]; then RPF_ARGS+=(--tab "$TAB"); fi
 if [[ -n "$WORKSPACE" ]]; then RPF_ARGS+=(--workspace "$WORKSPACE"); fi
 
 "$SCRIPT_DIR/rpflow.sh" "${RPF_ARGS[@]}"
+mv "$TMP_OUT" "$OUT"
 echo "Prompt exported to: $OUT" >&2

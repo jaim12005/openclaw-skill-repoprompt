@@ -9,6 +9,24 @@ set -euo pipefail
 ROOT="${RP_GITHUB_ROOT:-$HOME/Documents/github}"
 WORKSPACE_NAME="GitHub"
 
+usage() {
+  cat <<'USAGE'
+Usage:
+  bootstrap-github.sh
+
+Creates (if needed) and switches to the default Repo Prompt `GitHub` workspace
+for repos rooted under ~/Documents/github.
+
+Environment:
+  RP_GITHUB_ROOT   Override the workspace root folder (default: ~/Documents/github)
+USAGE
+}
+
+if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
+  usage
+  exit 0
+fi
+
 if ! command -v rp-cli >/dev/null 2>&1; then
   echo "rp-cli not found in PATH. Install via Repo Prompt → Settings → MCP Server → Install CLI to PATH." >&2
   exit 1
@@ -16,18 +34,18 @@ fi
 
 mkdir -p "$ROOT"
 
-# Create workspace if missing, otherwise just switch to it.
-if rp-cli -e 'workspace list' | grep -q "• ${WORKSPACE_NAME}"; then
-  set +e
-  OUT=$(rp-cli -e "workspace switch \"$WORKSPACE_NAME\"" 2>&1)
-  RC=$?
-  set -e
-  if [[ $RC -ne 0 ]] && ! echo "$OUT" | grep -qi 'already on workspace'; then
+# Try switch first; if the workspace does not exist yet, create it.
+set +e
+OUT=$(rp-cli -e "workspace switch \"$WORKSPACE_NAME\"" 2>&1)
+RC=$?
+set -e
+if [[ $RC -ne 0 ]]; then
+  if echo "$OUT" | grep -Eqi 'not found|does not exist|unknown workspace'; then
+    rp-cli -e "workspace create \"$WORKSPACE_NAME\" --folder-path \"$ROOT\" --switch"
+  elif ! echo "$OUT" | grep -qi 'already on workspace'; then
     echo "$OUT" >&2
     exit $RC
   fi
-else
-  rp-cli -e "workspace create \"$WORKSPACE_NAME\" --folder-path \"$ROOT\" --switch"
 fi
 
 # Show status (useful for debugging automation state)

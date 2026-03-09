@@ -30,6 +30,11 @@ if [[ $# -eq 0 ]]; then
   exit 2
 fi
 
+if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
+  usage
+  exit 0
+fi
+
 SUBCMD="$1"
 shift
 
@@ -61,15 +66,21 @@ has_flag() {
   return 1
 }
 
-if ! has_flag "--profile" "${ARGS[@]}"; then
+if (( ${#ARGS[@]} == 0 )); then
+  ARGS=(--profile "$DEFAULT_PROFILE")
+elif ! has_flag "--profile" "${ARGS[@]}"; then
   ARGS=(--profile "$DEFAULT_PROFILE" "${ARGS[@]}")
 fi
 
 if needs_route_defaults; then
-  if ! has_flag "--workspace" "${ARGS[@]}"; then
+  if (( ${#ARGS[@]} == 0 )); then
+    ARGS=(--workspace "$DEFAULT_WORKSPACE")
+  elif ! has_flag "--workspace" "${ARGS[@]}"; then
     ARGS=(--workspace "$DEFAULT_WORKSPACE" "${ARGS[@]}")
   fi
-  if ! has_flag "--tab" "${ARGS[@]}"; then
+  if (( ${#ARGS[@]} == 0 )); then
+    ARGS=(--tab "$DEFAULT_TAB")
+  elif ! has_flag "--tab" "${ARGS[@]}"; then
     ARGS=(--tab "$DEFAULT_TAB" "${ARGS[@]}")
   fi
 fi

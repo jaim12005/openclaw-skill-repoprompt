@@ -10,8 +10,16 @@ OUT=""
 MODE="plan"
 REASONING="${RP_AGENT_REASONING:-medium}"
 MODEL="${RP_AGENT_MODEL:-current_chat_model}"
+PROFILE="${RP_PROFILE:-normal}"
+REPORT_JSON=""
+TIMEOUT=""
+PREFLIGHT_TIMEOUT=""
+RETRY_TIMEOUT=""
+RETRY_TIMEOUT_SCALE=""
+RESUME_FROM_EXPORT=""
 CHAT_NAME=""
 NO_CHAT=0
+STRICT=0
 
 DEFAULT_WINDOW="${RP_WINDOW:-}"
 DEFAULT_WORKSPACE="${RP_WORKSPACE:-GitHub}"
@@ -25,13 +33,15 @@ Usage:
   agent-safe.sh [-w WINDOW_ID] [-t TAB] [--workspace NAME] \
     --select-set PATHS --task TEXT --out FILE \
     [--mode plan|edit|review|chat] [--reasoning low|medium|high] \
-    [--model MODEL_PRESET] [--chat-name NAME] [--no-chat]
+    [--model MODEL_PRESET] [--profile fast|normal|deep] \
+    [--report-json FILE] [--timeout SECONDS] [--preflight-timeout SECONDS] \
+    [--retry-timeout SECONDS] [--retry-timeout-scale FLOAT] \
+    [--resume-from-export FILE] [--chat-name NAME] [--no-chat] [--strict]
 
 What it does:
-  1) Preflight Repo Prompt routing (smoke)
-  2) Runs plan-export with retry + timeout fallback
-  3) Sets a safety-focused tab prompt for Agent Mode
-  4) Starts a new chat using the tab prompt (unless --no-chat)
+  1) Runs plan-export with retry + timeout fallback
+  2) Sets a safety-focused tab prompt for Agent Mode
+  3) Starts a new chat using the tab prompt (unless --no-chat)
 
 Notes:
   - Codex-first behavior is enforced via prompt policy + model preset default.
@@ -52,8 +62,16 @@ while [[ $# -gt 0 ]]; do
     --mode) MODE="$2"; shift 2 ;;
     --reasoning) REASONING="$2"; shift 2 ;;
     --model) MODEL="$2"; shift 2 ;;
+    --profile) PROFILE="$2"; shift 2 ;;
+    --report-json) REPORT_JSON="$2"; shift 2 ;;
+    --timeout) TIMEOUT="$2"; shift 2 ;;
+    --preflight-timeout) PREFLIGHT_TIMEOUT="$2"; shift 2 ;;
+    --retry-timeout) RETRY_TIMEOUT="$2"; shift 2 ;;
+    --retry-timeout-scale) RETRY_TIMEOUT_SCALE="$2"; shift 2 ;;
+    --resume-from-export) RESUME_FROM_EXPORT="$2"; shift 2 ;;
     --chat-name) CHAT_NAME="$2"; shift 2 ;;
     --no-chat) NO_CHAT=1; shift ;;
+    --strict) STRICT=1; shift ;;
     -h|--help) usage; exit 0 ;;
     *) echo "Unknown arg: $1" >&2; usage; exit 2 ;;
   esac
@@ -79,17 +97,31 @@ case "$REASONING" in
   *) echo "Invalid --reasoning: $REASONING (use low|medium|high)" >&2; exit 2 ;;
 esac
 
+case "$PROFILE" in
+  fast|normal|deep) ;;
+  *) echo "Invalid --profile: $PROFILE (use fast|normal|deep)" >&2; exit 2 ;;
+esac
+
 if [[ -z "$CHAT_NAME" ]]; then
   CHAT_NAME="agent-safe-$(date +%Y%m%d-%H%M%S)"
 fi
 
-# 1) Preflight routing
-bash "$SCRIPT_DIR/preflight.sh" ${WINDOW:+-w "$WINDOW"} ${TAB:+-t "$TAB"} --workspace "$WORKSPACE" >/dev/null
+PLAN_ARGS=()
+if [[ -n "$WINDOW" ]]; then PLAN_ARGS+=(--window "$WINDOW"); fi
+if [[ -n "$TAB" ]]; then PLAN_ARGS+=(--tab "$TAB"); fi
+PLAN_ARGS+=(--workspace "$WORKSPACE" --select-set "$SELECT_SET" --task "$TASK" --out "$OUT" --profile "$PROFILE")
+if [[ -n "$REPORT_JSON" ]]; then PLAN_ARGS+=(--report-json "$REPORT_JSON"); fi
+if [[ -n "$TIMEOUT" ]]; then PLAN_ARGS+=(--timeout "$TIMEOUT"); fi
+if [[ -n "$PREFLIGHT_TIMEOUT" ]]; then PLAN_ARGS+=(--preflight-timeout "$PREFLIGHT_TIMEOUT"); fi
+if [[ -n "$RETRY_TIMEOUT" ]]; then PLAN_ARGS+=(--retry-timeout "$RETRY_TIMEOUT"); fi
+if [[ -n "$RETRY_TIMEOUT_SCALE" ]]; then PLAN_ARGS+=(--retry-timeout-scale "$RETRY_TIMEOUT_SCALE"); fi
+if [[ -n "$RESUME_FROM_EXPORT" ]]; then PLAN_ARGS+=(--resume-from-export "$RESUME_FROM_EXPORT"); fi
+if [[ "$STRICT" -eq 1 ]]; then PLAN_ARGS+=(--strict); fi
 
-# 2) Deterministic context + export artifact
-bash "$SCRIPT_DIR/plan-export.sh" ${WINDOW:+-w "$WINDOW"} ${TAB:+-t "$TAB"} --workspace "$WORKSPACE" --select-set "$SELECT_SET" --task "$TASK" --out "$OUT" >/dev/null
+# 1) Deterministic context + export artifact
+bash "$SCRIPT_DIR/plan-export.sh" "${PLAN_ARGS[@]}" >/dev/null
 
-# 3) Set explicit Agent safety policy in tab prompt
+# 2) Set explicit Agent safety policy in tab prompt
 PROMPT_FILE="$(mktemp /tmp/rp-agent-safe-prompt.XXXXXX.txt)"
 trap 'rm -f "$PROMPT_FILE"' EXIT
 
@@ -127,10 +159,11 @@ print(json.dumps({"op": "set", "text": text}))
 PY
 )"
 
-RPF_ARGS=(call --tool prompt --json-arg "$PROMPT_JSON")
+RPF_ARGS=(call --profile "$PROFILE" --tool prompt --json-arg "$PROMPT_JSON")
 if [[ -n "$WINDOW" ]]; then RPF_ARGS+=(--window "$WINDOW"); fi
 if [[ -n "$TAB" ]]; then RPF_ARGS+=(--tab "$TAB"); fi
 if [[ -n "$WORKSPACE" ]]; then RPF_ARGS+=(--workspace "$WORKSPACE"); fi
+if [[ "$STRICT" -eq 1 ]]; then RPF_ARGS+=(--strict); fi
 "$SCRIPT_DIR/rpflow.sh" "${RPF_ARGS[@]}" >/dev/null
 
 if [[ "$NO_CHAT" -eq 1 ]]; then
@@ -139,7 +172,7 @@ if [[ "$NO_CHAT" -eq 1 ]]; then
   exit 0
 fi
 
-# 4) Start new Agent chat with tab prompt
+# 3) Start new Agent chat with tab prompt
 CHAT_JSON="$(MODE="$MODE" MODEL="$MODEL" CHAT_NAME="$CHAT_NAME" python3 - <<'PY'
 import json, os
 payload = {
@@ -156,10 +189,11 @@ print(json.dumps(payload))
 PY
 )"
 
-CHAT_ARGS=(call --tool chat_send --json-arg "$CHAT_JSON")
+CHAT_ARGS=(call --profile "$PROFILE" --tool chat_send --json-arg "$CHAT_JSON")
 if [[ -n "$WINDOW" ]]; then CHAT_ARGS+=(--window "$WINDOW"); fi
 if [[ -n "$TAB" ]]; then CHAT_ARGS+=(--tab "$TAB"); fi
 if [[ -n "$WORKSPACE" ]]; then CHAT_ARGS+=(--workspace "$WORKSPACE"); fi
+if [[ "$STRICT" -eq 1 ]]; then CHAT_ARGS+=(--strict); fi
 
 "$SCRIPT_DIR/rpflow.sh" "${CHAT_ARGS[@]}"
 

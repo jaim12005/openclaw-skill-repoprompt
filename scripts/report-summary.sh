@@ -14,9 +14,9 @@ Prints a concise summary for rpflow --report-json files.
 USAGE
 }
 
-if [[ $# -eq 0 ]]; then
+if [[ $# -eq 0 || "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
   usage
-  exit 2
+  [[ $# -eq 0 ]] && exit 2 || exit 0
 fi
 
 python3 - "$@" <<'PY'
