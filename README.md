@@ -28,7 +28,7 @@ Optional env defaults:
 - Artifact discipline: keep rpflow exports as reproducible checkpoints for agent sessions.
 
 ## Install (OpenClaw)
-1) Clone this repo into ~/clawd/skills/repoprompt (or ~/.openclaw/skills/repoprompt).
+1) Clone this repo into ~/.openclaw/workspace/skills/repoprompt (or ~/.openclaw/skills/repoprompt).
 2) Enable MCP Server in Repo Prompt and install rp-cli to PATH.
 3) Restart the OpenClaw gateway.
 
