@@ -39,15 +39,25 @@ Core flow:
    - `plan` for implementation planning
    - `question` for grounded answers
    - `review` for git-aware review output
-8) Add codemap_only or slices only where they help token discipline
-9) Export prompt/context only if an artifact is useful
-10) Choose execution lane:
+8) Manually refine after discovery when the task is important
+   - drop irrelevant files
+   - promote key files to full content
+   - keep reference files as codemaps
+   - keep giant files sliced instead of full when possible
+9) Add codemap_only or slices only where they help token discipline
+10) Export prompt/context only if an artifact is useful
+11) Choose execution lane:
    - IDE lane: Compose → Chat or Copy → Apply → Review
    - MCP direct lane: `apply_edits`, `file_actions`, `git`, `read_file`, `workspace_context`, `oracle_send`
    - Agent lane: `agent_manage` / `agent_run` with a workflow like `Plan & Build`, `Review`, `Refactor`, or `Investigate`
    - rpflow lane: wrapper-driven shell automation when retry/fallback/report-json/export behavior matters
-11) For risky edits, require edit review before apply
-12) Verify in Repo Prompt diff/review mode, iterate
+12) For risky edits, require edit review before apply
+13) Verify in Repo Prompt diff/review mode, iterate
+
+Context hygiene reminders:
+- use git diffs when recent changes are the point
+- prefer effective-context discipline over max-context bragging rights
+- for larger tasks, plan first and implement second instead of asking one model to improvise the whole thing in one pass
 
 Recommended scripts:
 - scripts/preflight.sh (fast validation)

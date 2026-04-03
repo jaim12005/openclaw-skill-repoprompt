@@ -95,6 +95,18 @@ High-value IDE controls:
 - real-time token counting
 - copy presets like Standard, Plan, XML Edit / Pro Edit, MCP Builder, MCP Pair, and MCP Agent
 
+Prompt anatomy in practice:
+- your instructions
+- file tree / project structure
+- codemaps for structural context
+- selected full files
+- slices from large files
+
+Manual context building still matters:
+- browse/select by hand when you already know the hot files
+- use Context Builder for discovery-heavy tasks
+- for complex tasks, start with Context Builder, then manually refine the selection before the next step
+
 High-value IDE workflows:
 - Copy & Paste = the simple lane for quick tasks and external web AIs
 - Built-in Chat = interactive exploration/iteration with selected context already included
@@ -109,6 +121,12 @@ A blunt heuristic that matches the product docs pretty well:
 - multi-file edit review: XML Pro Edit
 - very large iterative work: Pair Programming
 - fully automated: Agent Mode workflows
+
+Useful supporting IDE controls:
+- file tree modes like Auto / Full / Selected / None depending on how much structure the model needs
+- git diff inclusion when the task depends on recent changes or ongoing feature work
+- Diff Follow-up style review when you want a planning/review model to inspect what changed without resending the entire codebase
+- filter/ignore tuning when needed so the tree actually shows the files you care about
 
 ## Preferred MCP-first workflow
 
@@ -174,6 +192,11 @@ Useful `response_type` values:
 - `plan` = implementation plan grounded in repo reality
 - `question` = answer a deep codebase question
 - `review` = code review with git-context awareness
+
+Budget reality:
+- the default builder budget is calibrated around ChatGPT Pro-style paste flows
+- most models have an effective context window smaller than the advertised max
+- codemaps + slices + manual refinement are how you stay in the useful zone instead of shoveling tokens blindly
 
 ### 4) Export context or select a prompt preset
 

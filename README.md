@@ -51,6 +51,7 @@ Routing strategy on this machine:
 ## High-value current features to actually use
 - IDE Mode is the manual-control lane: Compose, Chat, Apply, Review
 - IDE workflows matter too: Copy & Paste, Built-in Chat, Architectural Planning, XML Pro Edit, Pair Programming
+- Prompt anatomy matters: instructions + file tree + codemaps + selected full files + slices
 - Context Builder is a two-stage system: discovery agent first, analysis model second
 - `context_builder` response types matter: `clarify`, `plan`, `question`, `review`
 - Oracle Chat lets agents ask grounded repo questions mid-session and works best as an ongoing conversation
@@ -61,11 +62,13 @@ Routing strategy on this machine:
 - In Claude Code, `/repo` is the quick discovery entrypoint for installed Repo Prompt commands
 - Codemaps are tree-sitter-backed signatures and are the reason Repo Prompt can include dramatically more reference files at sane token cost
 - Line slices and the real-time token counter are core IDE-mode tools, not trivia
-- Copy presets matter: Standard, Plan, XML Edit / Pro Edit, MCP Builder, MCP Pair, MCP Agent
+- Copy presets matter: Standard, Plan, XML Edit / Pro Edit, MCP Builder, MCP Pair, MCP Agent, Diff Follow-up
+- Git diff inclusion is a first-class prompt-building tool when you need recent-change context
 - Multi-root workspaces are first-class and matter for monorepos, microservices, and adjacent repos
 - Optional edit review is real and should stay on for risky work
 - CLI Providers mean Repo Prompt can often use existing Claude / ChatGPT / Google subscriptions
 - Repo Prompt is useful for more than code: any file-heavy workflow where context precision matters can benefit
+- Effective context matters more than advertised max context; codemaps/slices/refinement are how you stay sharp
 
 ## IDE workflow quick picks
 - 1–2 files / quick question: Copy & Paste or Built-in Chat
@@ -73,6 +76,11 @@ Routing strategy on this machine:
 - multi-file code changes with review: XML Pro Edit
 - huge iterative tasks: Pair Programming
 - hands-off automation: Agent Mode workflows
+
+Helpful manual pattern:
+- use Context Builder first for discovery-heavy work
+- then manually refine the selection before planning, chat, export, or apply/review
+- when continuing existing work, include diffs instead of re-dumping the whole world
 
 ## Repo Prompt skills are not OpenClaw skills
 Repo Prompt's slash skills are separate from OpenClaw skills.
