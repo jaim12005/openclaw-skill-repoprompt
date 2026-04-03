@@ -73,8 +73,11 @@ Important setup/control-plane surfaces in Repo Prompt itself:
 - the MCP popover/status dashboard is the primary place to enable the server, inspect status, manage clients, and adjust tool availability
 - chat model presets control what `list_models` / MCP chat flows expose to clients
 - the Context Builder agent setting controls whether Codex, Claude, or Gemini powers `context_builder`
+- copy presets, chat/model presets, workspace presets, model overrides, and benchmark controls live in Repo Prompt settings, not rpflow
 - Repo Prompt can install/copy MCP config for popular clients directly from the UI
 - provider setup also lives in Repo Prompt itself: direct API providers, CLI providers, OpenRouter, custom OpenAI-compatible providers, and OpenAI custom base URLs
+- Background Mode can keep Repo Prompt alive after you close windows, so a missing window is not the same thing as a stopped app/server
+- chat history is tab-bound in modern Repo Prompt, so continuity, `chats`, and agent sessions should usually be reasoned about per compose tab
 
 Provider lane rule of thumb:
 - direct API keys for your main production models when you want the cleanest native path
@@ -88,7 +91,7 @@ So do not default to old habits like:
 - forcing `workspace switch GitHub`
 - treating `rpflow` as mandatory for every Repo Prompt action
 - forgetting that `rp-cli` is a valid on-demand shell bridge when full MCP binding is overkill
-- using the old `chat_send` naming when Agent Mode now lives behind `agent_run`
+- assuming `chat_send` / `chat` and `agent_run` are the same thing; chat modes live on the chat/oracle side, while long-running agent sessions live behind `agent_run`
 
 ## IDE Mode still matters
 
@@ -330,12 +333,15 @@ But for automation that needs unambiguous payloads, prefer raw JSON forms.
 
 Use:
 - `manage_selection` for full files, codemap-only files, or slices
+- `manage_selection` ops like `get`, `add`, `remove`, `set`, `clear`, `preview`, `promote`, and `demote` when you need to inspect or reshape selection state directly
 - `file_search`, `get_file_tree`, `get_code_structure`, and `read_file` for discovery
 - `git` for diff/log/show/blame context
 
 Why this matters:
 - codemaps are tree-sitter-backed signatures, which lets Repo Prompt include far more reference files with far fewer tokens
 - slices are the precision tool when full-file context would be wasteful
+- `manage_selection` can return `summary`, `files`, `content`, or `codemaps` views, and supports `full`, `slices`, or `codemap_only` representation modes
+- `strict` and `path_display` are useful when you want automation to fail loudly or emit stable absolute-vs-relative paths
 - multi-root workspaces let the same flow span monorepos, service fleets, or related repos cleanly
 
 Examples:
@@ -344,6 +350,8 @@ Examples:
 rp-cli -c manage_selection -j '{"op":"clear"}'
 rp-cli -c manage_selection -j '{"op":"add","paths":["src/","README.md"]}'
 rp-cli -c manage_selection -j '{"op":"add","paths":["docs/"],"mode":"codemap_only"}'
+rp-cli -c manage_selection -j '{"op":"add","mode":"slices","slices":[{"path":"src/auth.ts","lines":"10-20,40"}]}'
+rp-cli -c manage_selection -j '{"op":"preview","view":"files"}'
 rp-cli -c file_search -j '{"pattern":"auth","filter":{"paths":["src/"]}}'
 rp-cli -c get_code_structure -j '{"paths":["src/auth/"]}'
 ```
@@ -408,9 +416,12 @@ rp-cli -c git -j '{"op":"diff","compare":"staged","detail":"files"}'
 rp-cli -c git -j '{"op":"log","count":5}'
 ```
 
-### 4) Export context or select a prompt preset
+### 4) Inspect workspace state, prompt presets, chats, and models
 
-Use `workspace_context` and `prompt` for exports/presets.
+Use `workspace_context` when you want a snapshot of the current prompt/selection/tree/token state.
+Use `prompt` for `get`, `set`, `append`, `clear`, `export`, `list_presets`, and `select_preset`.
+Use `chats` for tab/workspace-scoped chat history.
+Use `list_models` when you need the currently exposed chat/model preset list.
 Useful preset kinds include:
 - `mcpBuilder`
 - `mcpPlan`
@@ -423,10 +434,19 @@ Useful preset kinds include:
 Examples:
 
 ```bash
+rp-cli -c workspace_context -j '{"include":["prompt","selection","tree","tokens"]}'
 rp-cli -c prompt -j '{"op":"list_presets"}'
 rp-cli -c prompt -j '{"op":"select_preset","preset":"mcpBuilder"}'
+rp-cli -c prompt -j '{"op":"export","path":"/tmp/prompt.md","copy_preset":"mcpBuilder"}'
 rp-cli -c workspace_context -j '{"op":"export","path":"/tmp/repo-context.md","copy_preset":"mcpBuilder"}'
+rp-cli -c chats -j '{"action":"list","scope":"tab"}'
+rp-cli -e 'models'
 ```
+
+Practical notes:
+- chat history is tab-bound now, so `scope="tab"` is usually the right continuity default
+- `workspace_context include=[...]` is the fast state-inspection lane when you want prompt/selection/tree/tokens without exporting a full artifact
+- prompt presets drive ordinary export flows and ChatGPT Prompt Export / `rp-oracle-export` style handoff flows
 
 Preset selection should match the lane:
 - `Standard` / generic export when you want copy-paste into external chat
@@ -489,6 +509,8 @@ Treat those as first-class current product behavior, not trivia.
 In Claude Code specifically, telling the user/agent to type `/repo` is the fast way to discover the installed Repo Prompt command set.
 
 Control-surface rules that actually matter:
+- `agent_manage` ops are `list_agents`, `list_sessions`, `get_log`, `create_session`, `resume_session`, `stop_session`, `cleanup_sessions`, and `list_workflows`
+- `cleanup_sessions` only applies to MCP-originated sessions
 - `agent_run` ops are `start`, `poll`, `wait`, `cancel`, `steer`, and `respond`
 - `start` takes the initial `message` plus optional `session_name`, `model_id`, `workflow_id` / `workflow_name`, `timeout`, and `detach`
 - do not pass `session_id` to `start`; use `steer` to continue an existing session
@@ -600,6 +622,8 @@ Useful setup shorthand:
 - install `rp-cli` from Repo Prompt settings when you need terminal access to MCP tools
 - restart the client after first setup if it cached an empty tool list
 - approve the connection in Repo Prompt when prompted
+- if an `rp-cli` call seems hung, check Repo Prompt for an approval dialog before assuming the CLI is broken
+- if your launcher starts Repo Prompt and `rp-cli` together, add a short server-readiness wait upstream (for example the CLI's `--wait-for-server 5` pattern)
 
 Architecture/security notes that matter operationally:
 - Repo Prompt's MCP path is local-only with no exposed TCP ports in the normal UNIX-socket path
@@ -610,6 +634,7 @@ Architecture/security notes that matter operationally:
 - clients can automatically reconnect after Repo Prompt restarts or becomes temporarily unavailable
 - only one Repo Prompt window owns the MCP server at a time
 - `agent_run` / `agent_manage` are advanced control-plane tools and may be policy-gated on some connections
+- sandboxed Bash environments can block the local socket path; prefer direct MCP integration there and only fall back to shell-driven `rp-cli` when the sandbox actually permits it
 - the MCP dashboard can show active clients and disconnect stale ones when needed
 - status UI matters: Server Off / Listening / Connecting / Connected / Tool Running are meaningful operational states
 

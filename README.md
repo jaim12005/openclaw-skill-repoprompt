@@ -23,6 +23,8 @@ Setup/control-plane notes:
 - the MCP popover/dashboard is the primary place to enable the server, inspect connections, and manage tool availability
 - Repo Prompt can install/copy MCP config for popular clients like Cursor, VS Code, Codex CLI, Gemini CLI, Claude Desktop, and Claude Code
 - provider/model setup also lives there: direct API providers, CLI providers, OpenRouter, custom OpenAI-compatible providers, and OpenAI custom base URLs
+- copy presets, chat/model presets, workspace presets, model overrides, and benchmark controls live in Repo Prompt settings, not rpflow
+- Background Mode can keep Repo Prompt alive after you close windows, so closed windows do not necessarily mean the app/server stopped
 - `rp-cli` still requires the Repo Prompt app running with MCP Server enabled; it is a lighter shell access path, not a separate backend
 
 Quick launch helpers:
@@ -187,6 +189,14 @@ rp-cli -c oracle_send -j '{"message":"What code path actually performs login?","
 rp-cli -e 'search "TODO" --extensions .swift --context-lines 3'
 rp-cli -e 'file_search pattern=TODO filter.extensions=[".swift"]'
 
+# 8.5) Selection / prompt / chat-state helpers are worth knowing
+rp-cli -c manage_selection -j '{"op":"preview","view":"files"}'
+rp-cli -c manage_selection -j '{"op":"add","mode":"slices","slices":[{"path":"src/auth.ts","lines":"10-20,40"}]}'
+rp-cli -c workspace_context -j '{"include":["prompt","selection","tree","tokens"]}'
+rp-cli -c prompt -j '{"op":"list_presets"}'
+rp-cli -c chats -j '{"action":"list","scope":"tab"}'
+rp-cli -e 'models'
+
 # 9) Workflow shorthand flags and script files exist too
 rp-cli -w 1 -t MyTab --workspace MyProject --select-set src/ --export-prompt ~/out.md
 rp-cli --exec-file ~/scripts/daily-export.rp
@@ -268,10 +278,18 @@ TOOLS.md (operator runbook):
 ## Troubleshooting
 - `rp-cli not found in PATH`
   - Install from Repo Prompt MCP settings.
+- command hangs or an operation seems stuck waiting
+  - Check Repo Prompt for an approval dialog first.
+  - Confirm MCP Server is enabled and the app is actually still running.
 - tab/window routing errors
   - Run `scripts/preflight.sh` first (auto-selects when exactly one window exists).
   - If multiple windows are open, set `-w <window_id>` or `RP_WINDOW`.
   - Run `rpflow.sh exec -e 'tabs'` and target valid tab/window.
+- scripts that launch Repo Prompt and `rp-cli` together
+  - Add a small server-readiness wait upstream before the CLI call (for example the CLI's `--wait-for-server 5` pattern).
+- sandboxed shells cannot reach the Repo Prompt socket
+  - Prefer direct MCP integration instead of shelling out to `rp-cli`.
+  - If you must use Bash/CLI, run where local socket access is actually allowed.
 - builder stalls/timeouts
   - Use profile+retry+fallback, and optionally `--resume-from-export`.
 - agent session instability (2.0)
