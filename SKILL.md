@@ -72,12 +72,15 @@ Important product constraints:
 Important setup/control-plane surfaces in Repo Prompt itself:
 - the MCP popover/status dashboard is the primary place to enable the server, inspect status, manage clients, and adjust tool availability
 - chat model presets control what `list_models` / MCP chat flows expose to clients
+- when chat model presets are disabled, `list_models` effectively collapses to the current default chat model; when presets are enabled but empty, MCP chat falls back to Repo Prompt's configured fallback model
 - the Context Builder agent setting controls whether Codex, Claude, or Gemini powers `context_builder`
-- copy presets, chat/model presets, workspace presets, model overrides, and benchmark controls live in Repo Prompt settings, not rpflow
+- copy presets, chat presets, model presets, workspace presets, model overrides, and benchmark controls live in Repo Prompt settings, not rpflow
+- copy presets and chat presets are different knobs: copy presets shape exported/pasted artifacts, while chat presets shape in-app chat/oracle behavior
 - Repo Prompt can install/copy MCP config for popular clients directly from the UI
 - provider setup also lives in Repo Prompt itself: direct API providers, CLI providers, OpenRouter, custom OpenAI-compatible providers, and OpenAI custom base URLs
 - Background Mode can keep Repo Prompt alive after you close windows, so a missing window is not the same thing as a stopped app/server
 - chat history is tab-bound in modern Repo Prompt, so continuity, `chats`, and agent sessions should usually be reasoned about per compose tab
+- MCP `context_builder` runs can create a fresh compose tab for each discovery job, so discovery automation should not assume the current tab stays untouched or that tab counts remain static
 
 Provider lane rule of thumb:
 - direct API keys for your main production models when you want the cleanest native path
@@ -219,6 +222,7 @@ Useful workspace/tab control details:
 - `create_tab` supports `mode="blank"` or `mode="fork"`, plus `source_tab`, `bind`, and `focus`
 - `create` / `switch` can use `open_in_new_window`
 - `create` can use `switch_to_created`
+- workspace operations have different approval/risk levels in Repo Prompt itself: `list` is no-risk, `switch` to an existing workspace is low-risk, while `create`, `add_folder`, and `delete` can require explicit approval
 - `close_tab` refuses to close the last remaining tab, the currently visible tab unless `allow_active=true`, or tabs with live bound runs
 - `windows` / `list_windows` is the zero-parameter window discovery lane
 
@@ -544,6 +548,7 @@ Also remember:
 - each compose tab effectively owns its own agent session context
 - optional edit review is a real product feature and should stay enabled for risky work
 - image support is part of interactive Agent Mode, not something rpflow should pretend to wrap
+- native Agent Mode continuity tools like Session Handoff and Session History live in Repo Prompt itself, not rpflow; use them when a session gets long, you want to fork to another agent/model, or you need to resume prior work from the sidebar
 - session management and usage tracking live on the Agent Mode side, not in rpflow
 - first-time setup/testing for providers happens in the Repo Prompt app itself; the onboarding wizard and provider settings are the right place to verify connections
 
@@ -618,7 +623,7 @@ Do not hardcode `GitHub` / `T1` unless you actually mean it.
 Useful setup shorthand:
 - enable the MCP server in Repo Prompt settings
 - use the MCP popover/dashboard as the primary control point when possible
-- prefer Repo Prompt's install/copy-config actions for clients like Cursor, VS Code, Codex CLI, Gemini CLI, Claude Desktop, or Claude Code
+- prefer Repo Prompt's install/copy-config actions for clients like Cursor, VS Code, Codex CLI, Gemini CLI, OpenCode, Claude Desktop, or Claude Code
 - install `rp-cli` from Repo Prompt settings when you need terminal access to MCP tools
 - restart the client after first setup if it cached an empty tool list
 - approve the connection in Repo Prompt when prompted

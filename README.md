@@ -21,10 +21,13 @@ Current stance:
 Setup/control-plane notes:
 - install `rp-cli` from Repo Prompt settings when needed
 - the MCP popover/dashboard is the primary place to enable the server, inspect connections, and manage tool availability
-- Repo Prompt can install/copy MCP config for popular clients like Cursor, VS Code, Codex CLI, Gemini CLI, Claude Desktop, and Claude Code
+- Repo Prompt can install/copy MCP config for popular clients like Cursor, VS Code, Codex CLI, Gemini CLI, OpenCode, Claude Desktop, and Claude Code
 - provider/model setup also lives there: direct API providers, CLI providers, OpenRouter, custom OpenAI-compatible providers, and OpenAI custom base URLs
-- copy presets, chat/model presets, workspace presets, model overrides, and benchmark controls live in Repo Prompt settings, not rpflow
+- copy presets, chat presets, model presets, workspace presets, model overrides, and benchmark controls live in Repo Prompt settings, not rpflow
+- copy presets shape exported/pasted prompt artifacts; chat presets shape in-app chat/oracle behavior
+- if MCP chat model presets are disabled, `list_models` effectively collapses to the current default model; if presets are enabled but empty, Repo Prompt uses its configured fallback model
 - Background Mode can keep Repo Prompt alive after you close windows, so closed windows do not necessarily mean the app/server stopped
+- MCP `context_builder` runs can open a fresh compose tab per discovery job, so automation should not assume the active tab count stays fixed
 - `rp-cli` still requires the Repo Prompt app running with MCP Server enabled; it is a lighter shell access path, not a separate backend
 
 Quick launch helpers:
@@ -170,6 +173,7 @@ rp-cli -w 1 -t "Feature Work" -e 'context'
 
 # MCP-native alternative: bind once per session with manage_workspaces select_tab
 # After direct MCP select_tab, later tool calls stay on that tab until you change it.
+# Also remember: create/add-folder/delete-style workspace actions can require Repo Prompt approval based on risk.
 
 # 5) Chaining and redirection are part of the appeal
 rp-cli -e 'workspace MyProject && select set src/ && context --all'
@@ -215,6 +219,7 @@ rp-cli -e 'plan "Continue planning" --continue'
 rp-cli -c agent_manage -j '{"op":"list_sessions","limit":5}'
 rp-cli -c agent_run -j '{"op":"wait","session_id":"<uuid>","timeout":10}'
 rp-cli -c agent_run -j '{"op":"steer","session_id":"<uuid>","message":"Fix it","wait":true}'
+# Native Agent Mode continuity tools like Session Handoff / Session History stay in Repo Prompt UI itself.
 
 # 12) JSON-heavy edit/file actions stay clearer in call form
 rp-cli -e 'call apply_edits {"path":"src/f.ts","search":"old","replace":"new"}'
