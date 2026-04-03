@@ -13,6 +13,10 @@ BUILDER_TYPE=""
 COPY_PRESET=""
 PROFILE="${RP_PROFILE:-normal}"
 TIMEOUT=""
+RETRY_ON_TIMEOUT=0
+RETRY_TIMEOUT=""
+RETRY_TIMEOUT_SCALE="2.0"
+FALLBACK_EXPORT_ON_TIMEOUT=0
 PREFLIGHT_REPORT_JSON=""
 STRICT=0
 SLICE_SPECS=()
@@ -28,6 +32,8 @@ Usage:
     --select-set PATHS --out FILE \
     [--task TEXT] [--builder-type clarify|question|plan|review] \
     [--copy-preset PRESET] [--profile fast|normal|deep] [--timeout SECONDS] \
+    [--retry-on-timeout] [--retry-timeout SECONDS] [--retry-timeout-scale FLOAT] \
+    [--fallback-export-on-timeout] \
     [--preflight-report-json FILE] [--codemap PATHS] [--slice SPEC ...] [--strict]
 
 Notes:
@@ -38,6 +44,8 @@ Notes:
   - --slice format: path:start-end[:description]
   - Use multiple --slice flags for multiple ranges
   - Export writes to a temp file and only replaces --out on success
+  - With --fallback-export-on-timeout, the script still succeeds if Builder times out,
+    but the output artifact is context-only (no Builder-generated plan/review text)
 USAGE
 }
 
@@ -55,6 +63,10 @@ while [[ $# -gt 0 ]]; do
     --copy-preset) COPY_PRESET="$2"; shift 2 ;;
     --profile) PROFILE="$2"; shift 2 ;;
     --timeout) TIMEOUT="$2"; shift 2 ;;
+    --retry-on-timeout) RETRY_ON_TIMEOUT=1; shift ;;
+    --retry-timeout) RETRY_TIMEOUT="$2"; shift 2 ;;
+    --retry-timeout-scale) RETRY_TIMEOUT_SCALE="$2"; shift 2 ;;
+    --fallback-export-on-timeout) FALLBACK_EXPORT_ON_TIMEOUT=1; shift ;;
     --preflight-report-json) PREFLIGHT_REPORT_JSON="$2"; shift 2 ;;
     --out) OUT="$2"; shift 2 ;;
     --strict) STRICT=1; shift ;;
@@ -85,9 +97,28 @@ case "$PROFILE" in
   *) echo "Invalid --profile: $PROFILE (use fast|normal|deep)" >&2; exit 2 ;;
 esac
 
-if [[ -n "$TIMEOUT" ]] && ! [[ "$TIMEOUT" =~ ^[0-9]+$ ]] ; then
-  echo "Invalid --timeout: $TIMEOUT (use integer seconds)" >&2
-  exit 2
+validate_int_arg() {
+  local label="$1"
+  local value="$2"
+  if [[ -n "$value" ]] && ! [[ "$value" =~ ^[0-9]+$ ]]; then
+    echo "Invalid $label: $value (use integer seconds)" >&2
+    exit 2
+  fi
+}
+
+validate_int_arg --timeout "$TIMEOUT"
+validate_int_arg --retry-timeout "$RETRY_TIMEOUT"
+
+if [[ -n "$RETRY_TIMEOUT_SCALE" ]]; then
+  RETRY_TIMEOUT_SCALE="$(RETRY_TIMEOUT_SCALE="$RETRY_TIMEOUT_SCALE" python3 - <<'PY'
+import os
+raw = os.environ['RETRY_TIMEOUT_SCALE']
+value = float(raw)
+if value <= 1.0:
+    raise SystemExit(f"Invalid --retry-timeout-scale: {raw} (must be > 1.0)")
+print(value)
+PY
+)"
 fi
 
 if [[ -z "$TIMEOUT" && -n "$TASK" ]]; then
@@ -214,28 +245,118 @@ print(json.dumps(payload))
 PY
 )"
 
-CMD='call manage_selection {"op":"clear"}'
+SELECTION_CMD='call manage_selection {"op":"clear"}'
 if [[ "$SELECT_JSON" != "[]" ]]; then
-  CMD+=" && call manage_selection {\"op\":\"add\",\"paths\":$SELECT_JSON,\"mode\":\"full\"}"
+  SELECTION_CMD+=" && call manage_selection {\"op\":\"add\",\"paths\":$SELECT_JSON,\"mode\":\"full\"}"
 fi
 if [[ "$CODEMAP_JSON" != "[]" ]]; then
-  CMD+=" && call manage_selection {\"op\":\"add\",\"paths\":$CODEMAP_JSON,\"mode\":\"codemap_only\"}"
+  SELECTION_CMD+=" && call manage_selection {\"op\":\"add\",\"paths\":$CODEMAP_JSON,\"mode\":\"codemap_only\"}"
 fi
 if [[ "$SLICE_JSON" != "[]" ]]; then
-  CMD+=" && call manage_selection {\"op\":\"add\",\"mode\":\"slices\",\"slices\":$SLICE_JSON}"
+  SELECTION_CMD+=" && call manage_selection {\"op\":\"add\",\"mode\":\"slices\",\"slices\":$SLICE_JSON}"
 fi
+
+EXPORT_CMD="call workspace_context $EXPORT_JSON"
+FLOW_CMD="$SELECTION_CMD"
 if [[ -n "$BUILDER_JSON" ]]; then
-  CMD+=" && call context_builder $BUILDER_JSON"
+  FLOW_CMD+=" && call context_builder $BUILDER_JSON"
 fi
-CMD+=" && call workspace_context $EXPORT_JSON"
+FLOW_CMD+=" && $EXPORT_CMD"
+FALLBACK_CMD="$SELECTION_CMD && $EXPORT_CMD"
 
-RPF_ARGS=(exec --profile "$PROFILE" -e "$CMD")
-if [[ -n "$WINDOW" ]]; then RPF_ARGS+=(--window "$WINDOW"); fi
-if [[ -n "$TAB" ]]; then RPF_ARGS+=(--tab "$TAB"); fi
-if [[ -n "$WORKSPACE" ]]; then RPF_ARGS+=(--workspace "$WORKSPACE"); fi
-if [[ -n "$TIMEOUT" ]]; then RPF_ARGS+=(--timeout "$TIMEOUT"); fi
-if [[ "$STRICT" -eq 1 ]]; then RPF_ARGS+=(--strict); fi
+calc_retry_timeout() {
+  local current_timeout="$1"
+  if [[ -n "$RETRY_TIMEOUT" ]]; then
+    printf '%s\n' "$RETRY_TIMEOUT"
+    return 0
+  fi
+  CURRENT_TIMEOUT="$current_timeout" RETRY_TIMEOUT_SCALE="$RETRY_TIMEOUT_SCALE" python3 - <<'PY'
+import math, os
+current = int(os.environ['CURRENT_TIMEOUT'])
+scale = float(os.environ['RETRY_TIMEOUT_SCALE'])
+print(max(current + 1, int(math.ceil(current * scale))))
+PY
+}
 
-"$SCRIPT_DIR/rpflow.sh" "${RPF_ARGS[@]}"
-mv "$TMP_OUT" "$OUT"
-echo "Prompt/context exported to: $OUT" >&2
+run_exec_flow() {
+  local cmd="$1"
+  local timeout_value="$2"
+  local args=(exec --profile "$PROFILE")
+  if [[ -n "$WINDOW" ]]; then args+=(--window "$WINDOW"); fi
+  if [[ -n "$TAB" ]]; then args+=(--tab "$TAB"); fi
+  if [[ -n "$WORKSPACE" ]]; then args+=(--workspace "$WORKSPACE"); fi
+  if [[ -n "$timeout_value" ]]; then args+=(--timeout "$timeout_value"); fi
+  if [[ "$STRICT" -eq 1 ]]; then args+=(--strict); fi
+  args+=(-e "$cmd")
+
+  "$SCRIPT_DIR/rpflow.sh" "${args[@]}"
+}
+
+RETRY_USED=0
+
+if [[ -z "$BUILDER_JSON" ]]; then
+  run_exec_flow "$FALLBACK_CMD" "$TIMEOUT"
+  mv "$TMP_OUT" "$OUT"
+  echo "Prompt/context exported to: $OUT" >&2
+  exit 0
+fi
+
+BUILDER_TIMEOUT_MSG="Context Builder timed out"
+if [[ -n "$TIMEOUT" ]]; then
+  echo "Running Context Builder flow with timeout=${TIMEOUT}s..." >&2
+fi
+
+set +e
+run_exec_flow "$FLOW_CMD" "$TIMEOUT"
+FIRST_STATUS=$?
+set -e
+if [[ "$FIRST_STATUS" -eq 0 ]]; then
+  mv "$TMP_OUT" "$OUT"
+  echo "Prompt/context exported to: $OUT" >&2
+  exit 0
+fi
+if [[ "$FIRST_STATUS" -ne 124 ]]; then
+  echo "Context Builder flow failed (exit=$FIRST_STATUS). No fallback applied." >&2
+  exit "$FIRST_STATUS"
+fi
+
+if [[ "$RETRY_ON_TIMEOUT" -eq 1 ]]; then
+  RETRY_USED=1
+  EFFECTIVE_RETRY_TIMEOUT="$(calc_retry_timeout "$TIMEOUT")"
+  echo "$BUILDER_TIMEOUT_MSG after ${TIMEOUT:-unknown}s; retrying once with timeout=${EFFECTIVE_RETRY_TIMEOUT}s..." >&2
+  rm -f "$TMP_OUT"
+  set +e
+  run_exec_flow "$FLOW_CMD" "$EFFECTIVE_RETRY_TIMEOUT"
+  SECOND_STATUS=$?
+  set -e
+  if [[ "$SECOND_STATUS" -eq 0 ]]; then
+    mv "$TMP_OUT" "$OUT"
+    echo "Prompt/context exported to: $OUT (Context Builder succeeded on retry)" >&2
+    exit 0
+  fi
+  if [[ "$SECOND_STATUS" -ne 124 ]]; then
+    echo "Context Builder retry failed (exit=$SECOND_STATUS). No timeout fallback applied." >&2
+    exit "$SECOND_STATUS"
+  fi
+  TIMEOUT="$EFFECTIVE_RETRY_TIMEOUT"
+fi
+
+if [[ "$FALLBACK_EXPORT_ON_TIMEOUT" -eq 1 ]]; then
+  if [[ "$RETRY_USED" -eq 1 ]]; then
+    echo "$BUILDER_TIMEOUT_MSG after retry; exporting context-only artifact instead..." >&2
+  else
+    echo "$BUILDER_TIMEOUT_MSG; exporting context-only artifact instead..." >&2
+  fi
+  rm -f "$TMP_OUT"
+  run_exec_flow "$FALLBACK_CMD" "$TIMEOUT"
+  mv "$TMP_OUT" "$OUT"
+  echo "Prompt/context exported to: $OUT (fallback export used; Builder output missing due to timeout)" >&2
+  exit 0
+fi
+
+if [[ "$RETRY_USED" -eq 1 ]]; then
+  echo "$BUILDER_TIMEOUT_MSG again after retry. Re-run with a longer --timeout or use --fallback-export-on-timeout." >&2
+else
+  echo "$BUILDER_TIMEOUT_MSG. Re-run with a longer --timeout, --retry-on-timeout, or --fallback-export-on-timeout." >&2
+fi
+exit 124

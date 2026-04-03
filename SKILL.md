@@ -665,9 +665,9 @@ For repo work:
 - `scripts/rpflow.sh` — wrapper into the local rpflow repo
 - `scripts/rp.sh` — thin `rpflow exec` wrapper
 - `scripts/export-prompt.sh` — bind/select/codemap/slice → export helper
-- `scripts/plan-task.sh` — thin MCP-first planning wrapper (`context_builder plan` + export) with a longer Builder timeout default
+- `scripts/plan-task.sh` — thin MCP-first planning wrapper (`context_builder plan` + export) with slower-Builder defaults: 300s timeout, one retry, then context-only fallback export
 - `scripts/plan-export.sh` — autopilot wrapper for plan + export with retry/fallback
-- `scripts/review-current-changes.sh` — review wrapper that can auto-select changed files from a git repo, uses a longer Builder timeout default, and exports a review artifact
+- `scripts/review-current-changes.sh` — review wrapper that can auto-select changed files from a git repo, uses the same slower-Builder defaults (timeout + retry + fallback export), and exports a review artifact
 - `scripts/context-flow.sh` — curated context-building shell flow
 - `scripts/agent-safe.sh` — safe Agent Mode kickoff wrapper using `agent_run`
 - `scripts/report-summary.sh` — compact reader for rpflow JSON reports
@@ -677,6 +677,7 @@ For repo work:
 
 - Prefer `bind_context` over guessing window/workspace state.
 - Prefer `context_builder` over giant manual file sets when discovery is the real problem.
+- For slow Builder runs, the thin `plan-task.sh` / `review-current-changes.sh` wrappers now retry once and can still emit a context-only export artifact instead of failing empty-handed.
 - Prefer `agent_run`/`agent_manage` over older chat-oriented assumptions.
 - Prefer prompt presets and `workspace_context export` over ad hoc copy/paste when you want a reproducible artifact.
 - Keep one writer for risky edits.

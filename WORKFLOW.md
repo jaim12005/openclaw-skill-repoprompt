@@ -88,6 +88,15 @@ Examples:
     --task "Plan the next MCP-first wrapper cleanup" \
     --out /tmp/rp-plan.md
 
+- Force fast fallback behavior while testing a slow Builder lane:
+  bash scripts/plan-task.sh \
+    --bind "$PWD" \
+    --select-set "README.md" \
+    --task "Briefly plan one useful next improvement" \
+    --timeout 5 \
+    --retry-timeout 8 \
+    --out /tmp/rp-plan-fallback.md
+
 - Review the current working tree of the bound repo:
   bash scripts/review-current-changes.sh \
     --bind "$PWD" \
@@ -106,6 +115,7 @@ Notes:
 - Use codemap_only for reference files to keep token budgets low.
 - Use slices for tight, high-signal ranges instead of full files.
 - For long agent sessions, keep periodic exports/checkpoints.
+- Thin Builder wrappers (`plan-task.sh`, `review-current-changes.sh`) now default to retry once and then fall back to a context-only export artifact; disable that explicitly if you want hard failure instead.
 - Prefer `bind_context` and current active routing over stale hardcoded workspace assumptions.
 - In Repo Prompt itself, workflows and slash skills are different tools; use one or the other per message, not both.
 - Repo Prompt slash skills are not OpenClaw skills; they are Repo Prompt-local markdown templates discovered from `.claude/*` or `.agents/*` paths.
