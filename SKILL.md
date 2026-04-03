@@ -165,6 +165,13 @@ Core rule that stays true in both lanes:
 selection is context.
 Whether you reached Repo Prompt through `rp-cli` or direct MCP, the selected files are what chat/review/agent flows actually see.
 
+`rp-cli` practical notes:
+- exec mode (`-e '...'`) is the primary shell/agent mode
+- shorthand commands map onto MCP tools, so `select`, `builder`, `chat`, `search`, `tree`, `git`, and friends are fair game
+- `rp-cli -d <tool>` is the fast way to inspect parameter docs from the terminal
+- for deterministic automation and complex payloads, prefer raw JSON calls (`-c ... -j ...`)
+- for tools like `apply_edits` / `file_actions`, JSON-style invocation is the reliable path
+
 ## Preferred MCP-first workflow
 
 ### 1) Bind to the right repo
@@ -184,6 +191,17 @@ rp-cli -c bind_context -j '{
 Use `bind_context` for routing.
 Use `manage_workspaces` when you truly need workspace inventory or workspace lifecycle.
 With `rp-cli`, remember that window/tab targeting is usually explicit per invocation unless you rely on Repo Prompt's active state or a wrapper like `rpflow`.
+
+Manual exec-style examples are fine when speed matters:
+
+```bash
+rp-cli -e 'manage_selection op=set paths=["src/"]'
+rp-cli -e 'chat_send message="How does this work?"'
+rp-cli -e 'context_builder task="find auth code"'
+rp-cli -e 'context_builder task="explain auth" response_type=question'
+```
+
+But for automation that needs unambiguous payloads, prefer raw JSON forms.
 
 ### 2) Build selection deliberately
 

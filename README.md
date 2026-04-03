@@ -46,6 +46,7 @@ Routing strategy on this machine:
 ## Recommended defaults
 - MCP-first for normal work: `bind_context`, `manage_selection`, `context_builder`, `workspace_context`, `oracle_send`, `agent_manage`, `agent_run`
 - Use `rp-cli` when shell/on-demand access is enough and you do not want a full persistent MCP binding
+- In `rp-cli`, use exec mode (`-e`) for quick human/agent work and raw JSON (`-c ... -j ...`) for deterministic automation
 - Provider: Codex-first agent routing; use Repo Prompt role labels like `engineer` / `pair` unless you need a concrete model_id
 - Reasoning effort: low (quick scans), medium (default), high (complex multi-file work)
 - Approval/edit review: enable for risky/destructive/broad edits
@@ -143,18 +144,23 @@ rp-cli -c bind_context -j '{
   "create_if_missing":true
 }'
 
-# 2) Build context with MCP-native tools
+# 2) Quick shell-style usage via exec mode
+rp-cli -e 'manage_selection op=set paths=["src/"]'
+rp-cli -e 'chat_send message="How does this work?"'
+
+# 3) Deterministic JSON-style usage for automation
 rp-cli -c manage_selection -j '{"op":"clear"}'
 rp-cli -c manage_selection -j '{"op":"add","paths":["src/","README.md"]}'
 rp-cli -c context_builder -j '{"instructions":"<task>draft plan</task>","response_type":"plan"}'
 
-# 3) Ask a grounded repo question mid-session when useful
+# 4) Ask a grounded repo question mid-session when useful
 rp-cli -c oracle_send -j '{"message":"What code path actually performs login?","mode":"plan"}'
 
-# 4) Export only if you need an artifact
-rp-cli -c workspace_context -j '{"op":"export","path":"/tmp/repo-context.md","copy_preset":"mcpBuilder"}'
+# 5) Discover tool docs from the terminal when needed
+rp-cli -d manage_selection
+rp-cli -d chat_send --verbose
 
-# 5) Use rpflow when you want shell-level reliability helpers
+# 6) Use rpflow when you want shell-level reliability helpers
 ./scripts/rpflow.sh autopilot \
   --profile fast \
   --select-set repo/src/ \
