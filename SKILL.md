@@ -155,6 +155,8 @@ Use:
 - `oracle_utils` for models and session helpers
 
 That is especially useful when an agent needs a second opinion or a grounded repo answer while already working.
+Oracle is strongest when treated as an ongoing reasoning conversation, not a one-shot lookup.
+Repo Prompt keeps Oracle context synced with what the agent has already read, then lets Context Builder add even denser targeted context for the exact question.
 
 Agent Mode now centers on:
 - `agent_manage` for agent/model/workflow discovery and session management
@@ -191,6 +193,9 @@ These matter because they are not all the same thing:
 - `Refactor` = analyze with review-style context → plan improvements → implement while preserving behavior
 - `Investigate` = assess → explore → deep-dive follow-ups → evidence gathering → findings report
 - `ChatGPT Export` = Context Builder clarify-mode curation → prompt export for an external second opinion
+
+The point of these workflows is that your task description gets wrapped in a proven protocol.
+The agent does not have to reinvent the approach from scratch every time.
 
 Repo Prompt also exposes workflow-oriented slash-command style affordances in some MCP clients, such as `/rp-build`, `/rp-review`, `/rp-refactor`, `/rp-investigate`, and `/rp-oracle-export`.
 Treat those as first-class current product behavior, not trivia.
@@ -256,6 +261,8 @@ Important locations:
 - Codex CLI / Gemini CLI: `<project>/.agents/skills/`, `<project>/.agents/slash/`, `~/.agents/skills/`, `~/.agents/slash/`
 
 Repo Prompt can install built-in workflow skills for terminal agents too, so external agents can use the same workflow family from slash commands.
+That includes built-in skills like `/rp-build`, `/rp-review`, `/rp-refactor`, `/rp-investigate`, and `/rp-oracle-export` when installed.
+In Agent Mode itself, use either a workflow or a slash skill for a message, not both.
 
 ## rpflow commands that still matter
 
@@ -277,16 +284,21 @@ Do not hardcode `GitHub` / `T1` unless you actually mean it.
 
 Useful setup shorthand:
 - enable the MCP server in Repo Prompt settings
-- install/configure the client from Repo Prompt's MCP settings when possible
+- use the MCP popover/dashboard as the primary control point when possible
+- prefer Repo Prompt's install/copy-config actions for clients like Cursor, Claude Code, or Codex CLI
 - restart the client after first setup if it cached an empty tool list
 - approve the connection in Repo Prompt when prompted
 
 Architecture/security notes that matter operationally:
-- Repo Prompt's MCP path is local-first and macOS-local in practice
+- Repo Prompt's MCP path is local-only with no exposed TCP ports in the normal UNIX-socket path
+- socket/session state is per-user, so cross-user access is not the default model
 - traffic is brokered through the Repo Prompt app and local IPC rather than exposing random open network services by default
 - connection approval and per-tool enable/disable happen in Repo Prompt, not rpflow
+- each CLI instance has its own session identity for connection management
+- clients can automatically reconnect after Repo Prompt restarts or becomes temporarily unavailable
 - only one Repo Prompt window owns the MCP server at a time
 - `agent_run` / `agent_manage` are advanced control-plane tools and may be policy-gated on some connections
+- the MCP dashboard can show active clients and disconnect stale ones when needed
 
 ## Local defaults on this machine
 

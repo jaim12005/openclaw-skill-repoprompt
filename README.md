@@ -45,7 +45,7 @@ Routing strategy on this machine:
 
 ## High-value current features to actually use
 - Context Builder is a two-stage system: discovery agent first, analysis model second
-- Oracle Chat lets agents ask grounded repo questions mid-session
+- Oracle Chat lets agents ask grounded repo questions mid-session and works best as an ongoing conversation
 - Agent Mode sessions are per-tab, so parallel tasks can stay isolated
 - Built-in workflows matter: `Plan & Build`, `Review`, `Refactor`, `Investigate`, `ChatGPT Export`
 - Workflow protocols are the point: they separate discovery from implementation so the agent's reasoning budget is spent on the solution instead of orientation noise
@@ -60,10 +60,15 @@ Routing strategy on this machine:
 Repo Prompt's slash skills are separate from OpenClaw skills.
 They are on-disk markdown templates for Agent Mode and terminal agents, discovered from provider-specific folders like `.claude/skills`, `.claude/commands`, `.agents/skills`, and `.agents/slash`.
 Use them when you want Repo Prompt-native reusable workflows like `/rp-build` or your own custom templates.
+In Agent Mode, use either a workflow or a slash skill per message, not both.
 
 ## MCP server quick realities
 - setup/approval happens in Repo Prompt, not rpflow
+- use the MCP popover/dashboard for quick setup, auto-start, enabled tools, and connection visibility
 - if a client shows 0 tools right after setup, restart it so it refreshes the tool list
+- the normal transport is local-only with no open TCP ports exposed
+- per-user isolation is the expected security model for the socket/session path
+- clients can reconnect automatically after temporary Repo Prompt restarts/outages
 - only one Repo Prompt window owns the MCP server at a time
 - advanced tools like `agent_run` / `agent_manage` can be policy-gated on some connections
 - Repo Prompt is the local control plane; rpflow is just the shell helper downstream of that
