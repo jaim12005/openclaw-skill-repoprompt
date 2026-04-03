@@ -155,40 +155,58 @@ rp-cli -e 'agent_manage op=list_workflows'
 rp-cli -e 'workspace list'
 rp-cli -e 'tabs create "Bugfix"'
 
-# 3) Chaining and redirection are part of the appeal
+# 3) Tool discovery/schema inspection is built in
+rp-cli -l
+rp-cli -l explore
+rp-cli --tools-schema
+rp-cli -d search
+
+# 4) Multi-window routing becomes explicit when more than one window is open
+rp-cli -e 'windows'
+rp-cli -w 1 -e 'tabs'
+rp-cli -w 1 -t "Feature Work" -e 'context'
+
+# 5) Chaining and redirection are part of the appeal
 rp-cli -e 'workspace MyProject && select set src/ && context --all'
 rp-cli -e 'tree > /tmp/structure.txt'
 
-# 4) Deterministic JSON-style usage for automation
+# 6) Deterministic JSON-style usage for automation
 rp-cli -c manage_selection -j '{"op":"clear"}'
 rp-cli -c manage_selection -j '{"op":"add","paths":["src/","README.md"]}'
 rp-cli -c context_builder -j '{"instructions":"<task>draft plan</task>","response_type":"plan"}'
+rp-cli -c read_file -j args.json
+echo '{"path":"/tmp/test.txt"}' | rp-cli -c read_file -j @-
 
-# 4) Ask a grounded repo question mid-session when useful
+# 7) Ask a grounded repo question mid-session when useful
 rp-cli -c oracle_send -j '{"message":"What code path actually performs login?","mode":"plan"}'
 
-# 6) Discover tool docs from the terminal when needed
-rp-cli -d manage_selection
-rp-cli -d chat_send --verbose
-rp-cli -d agent_run
-
-# 7) Parameter styles are flexible
+# 8) Parameter styles are flexible
 rp-cli -e 'search "TODO" --extensions .swift --context-lines 3'
 rp-cli -e 'file_search pattern=TODO filter.extensions=[".swift"]'
 
-# 8) Chat semantics matter
+# 9) Workflow shorthand flags and script files exist too
+rp-cli -w 1 -t MyTab --workspace MyProject --select-set src/ --export-prompt ~/out.md
+rp-cli --exec-file ~/scripts/daily-export.rp
+
+# 10) Chat semantics matter
 rp-cli -e 'chat "Follow-up question"'
 rp-cli -e 'chat "New topic" --new'
 rp-cli -e 'plan "Continue planning" --continue'
 
-# 9) JSON-heavy edit/file actions stay clearer in call form
+# 11) JSON-heavy edit/file actions stay clearer in call form
 rp-cli -e 'call apply_edits {"path":"src/f.ts","search":"old","replace":"new"}'
 rp-cli -e 'call file_actions {"action":"create","path":"src/new.ts"}'
 
-# 10) Interactive mode exists for exploration/debugging
+# 12) Help is tiered
+rp-cli --help
+rp-cli --help-interactive
+rp-cli --help-scripting
+rp-cli --help-advanced
+
+# 13) Interactive mode exists for exploration/debugging
 rp-cli -i
 
-# 11) Use rpflow when you want shell-level reliability helpers
+# 14) Use rpflow when you want shell-level reliability helpers
 ./scripts/rpflow.sh autopilot \
   --profile fast \
   --select-set repo/src/ \
