@@ -50,6 +50,7 @@ Routing strategy on this machine:
 
 ## High-value current features to actually use
 - IDE Mode is the manual-control lane: Compose, Chat, Apply, Review
+- IDE workflows matter too: Copy & Paste, Built-in Chat, Architectural Planning, XML Pro Edit, Pair Programming
 - Context Builder is a two-stage system: discovery agent first, analysis model second
 - `context_builder` response types matter: `clarify`, `plan`, `question`, `review`
 - Oracle Chat lets agents ask grounded repo questions mid-session and works best as an ongoing conversation
@@ -65,6 +66,13 @@ Routing strategy on this machine:
 - Optional edit review is real and should stay on for risky work
 - CLI Providers mean Repo Prompt can often use existing Claude / ChatGPT / Google subscriptions
 - Repo Prompt is useful for more than code: any file-heavy workflow where context precision matters can benefit
+
+## IDE workflow quick picks
+- 1–2 files / quick question: Copy & Paste or Built-in Chat
+- 3+ files / complex change: Architectural Planning first
+- multi-file code changes with review: XML Pro Edit
+- huge iterative tasks: Pair Programming
+- hands-off automation: Agent Mode workflows
 
 ## Repo Prompt skills are not OpenClaw skills
 Repo Prompt's slash skills are separate from OpenClaw skills.

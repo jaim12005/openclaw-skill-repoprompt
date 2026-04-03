@@ -95,7 +95,20 @@ High-value IDE controls:
 - real-time token counting
 - copy presets like Standard, Plan, XML Edit / Pro Edit, MCP Builder, MCP Pair, and MCP Agent
 
+High-value IDE workflows:
+- Copy & Paste = the simple lane for quick tasks and external web AIs
+- Built-in Chat = interactive exploration/iteration with selected context already included
+- Architectural Planning = plan first for 3+ file or system-shaping work
+- XML Pro Edit = structured multi-file edits with Review before apply
+- Pair Programming = large iterative work where a driver agent and Repo Prompt Chat split the job
+
 That manual lane is often the right answer when you want careful context curation, external model copy/paste, or review before apply.
+A blunt heuristic that matches the product docs pretty well:
+- 1–2 files: Copy & Paste or Built-in Chat
+- 3+ files / complex change: Architectural Planning first
+- multi-file edit review: XML Pro Edit
+- very large iterative work: Pair Programming
+- fully automated: Agent Mode workflows
 
 ## Preferred MCP-first workflow
 
@@ -184,7 +197,7 @@ rp-cli -c workspace_context -j '{"op":"export","path":"/tmp/repo-context.md","co
 
 Preset selection should match the lane:
 - `Standard` / generic export when you want copy-paste into external chat
-- `Plan` when you want architectural thinking
+- `Plan` when you want architectural thinking before implementation
 - `XML Edit` / `Pro Edit` when you want patch/apply/review flows
 - `MCP Builder`, `MCP Pair`, `MCP Agent` when priming MCP-connected workflows
 
@@ -286,7 +299,7 @@ That makes rpflow a good fit for:
 - environments where you want one stable shell surface over changing Repo Prompt UI details
 
 It is not required for ordinary MCP-driven Repo Prompt work.
-And it should not try to become a bad clone of interactive Agent Mode features like per-tab sessions, Oracle questioning, image attachments, workflow-driven agent UX, or the IDE Mode Compose/Chat/Apply/Review experience.
+And it should not try to become a bad clone of interactive Agent Mode features like per-tab sessions, Oracle questioning, image attachments, workflow-driven agent UX, or the IDE Mode Compose/Chat/Apply/Review and preset-driven workflow experience.
 
 ## Repo Prompt skills vs OpenClaw skills
 

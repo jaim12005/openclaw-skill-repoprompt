@@ -17,31 +17,37 @@ Core flow:
 2) Decide whether this is an IDE-manual task or an MCP/agent task
    - IDE/manual lane when you want hand-curated context, copy presets, built-in chat, or Apply/Review control
    - MCP/agent lane when you want automation, workflows, Oracle, or long-running agent sessions
-3) Choose the right workflow shape up front
+3) For IDE/manual work, choose the right workflow shape
+   - Copy & Paste for quick small tasks
+   - Built-in Chat for iterative exploration
+   - Architectural Planning for 3+ file or system-shaping tasks
+   - XML Pro Edit for multi-file edits with review
+   - Pair Programming for very large iterative work
+4) For Agent/MCP work, choose the right workflow shape up front
    - `Plan & Build` for most implementation work
    - `Review` before committing or when auditing diffs
    - `Investigate` for debugging and root-cause work
    - `Refactor` for cleanup/restructure while preserving behavior
    - `ChatGPT Export` when you want an external second opinion
-4) Let the workflow own the protocol when you use one
+5) Let the workflow own the protocol when you use one
    - the workflow should handle discovery vs implementation sequencing
    - use Oracle follow-ups when the workflow benefits from architectural clarification
    - in external agents, `/repo` is often the fastest way to discover the available Repo Prompt workflow commands
-5) Anchor selection (small, full content)
-6) Use `context_builder` for discovery-heavy work
+6) Anchor selection (small, full content)
+7) Use `context_builder` for discovery-heavy work
    - `clarify` for curated context only
    - `plan` for implementation planning
    - `question` for grounded answers
    - `review` for git-aware review output
-7) Add codemap_only or slices only where they help token discipline
-8) Export prompt/context only if an artifact is useful
-9) Choose execution lane:
+8) Add codemap_only or slices only where they help token discipline
+9) Export prompt/context only if an artifact is useful
+10) Choose execution lane:
    - IDE lane: Compose → Chat or Copy → Apply → Review
    - MCP direct lane: `apply_edits`, `file_actions`, `git`, `read_file`, `workspace_context`, `oracle_send`
    - Agent lane: `agent_manage` / `agent_run` with a workflow like `Plan & Build`, `Review`, `Refactor`, or `Investigate`
    - rpflow lane: wrapper-driven shell automation when retry/fallback/report-json/export behavior matters
-10) For risky edits, require edit review before apply
-11) Verify in Repo Prompt diff/review mode, iterate
+11) For risky edits, require edit review before apply
+12) Verify in Repo Prompt diff/review mode, iterate
 
 Recommended scripts:
 - scripts/preflight.sh (fast validation)
