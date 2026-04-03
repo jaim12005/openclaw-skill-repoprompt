@@ -12,6 +12,7 @@ Use this skill when you want Repo Prompt to help with:
 - targeted file selection and prompt exports
 - code review and git-aware analysis
 - agentic coding loops in Repo Prompt Agent Mode
+- precise manual prompt building in IDE Mode
 - multi-root workspace analysis across related repos/services
 - non-code file/document exploration where precise context control still matters
 - deterministic shell automation when an export/report/fallback artifact matters
@@ -75,6 +76,26 @@ So do not default to old habits like:
 - forcing `workspace switch GitHub`
 - treating `rpflow` as mandatory for every Repo Prompt action
 - using the old `chat_send` naming when Agent Mode now lives behind `agent_run`
+
+## IDE Mode still matters
+
+Do not treat Repo Prompt as only an MCP/agent product.
+IDE Mode is still the core manual lane when you want full control over context before involving a model.
+
+The four IDE views matter operationally:
+- Compose = build selection, write instructions, choose a copy preset
+- Chat = talk to a model with selected context included automatically
+- Apply = paste AI-generated edits for parsing
+- Review = inspect/approve/reject diffs before applying
+
+High-value IDE controls:
+- full-file selection
+- slices for precise line-range context
+- codemaps for cheap structural context
+- real-time token counting
+- copy presets like Standard, Plan, XML Edit / Pro Edit, MCP Builder, MCP Pair, and MCP Agent
+
+That manual lane is often the right answer when you want careful context curation, external model copy/paste, or review before apply.
 
 ## Preferred MCP-first workflow
 
@@ -160,6 +181,12 @@ rp-cli -c prompt -j '{"op":"list_presets"}'
 rp-cli -c prompt -j '{"op":"select_preset","preset":"mcpBuilder"}'
 rp-cli -c workspace_context -j '{"op":"export","path":"/tmp/repo-context.md","copy_preset":"mcpBuilder"}'
 ```
+
+Preset selection should match the lane:
+- `Standard` / generic export when you want copy-paste into external chat
+- `Plan` when you want architectural thinking
+- `XML Edit` / `Pro Edit` when you want patch/apply/review flows
+- `MCP Builder`, `MCP Pair`, `MCP Agent` when priming MCP-connected workflows
 
 ### 5) Use Oracle Chat and Agent Mode intentionally
 
@@ -259,7 +286,7 @@ That makes rpflow a good fit for:
 - environments where you want one stable shell surface over changing Repo Prompt UI details
 
 It is not required for ordinary MCP-driven Repo Prompt work.
-And it should not try to become a bad clone of interactive Agent Mode features like per-tab sessions, Oracle questioning, image attachments, or workflow-driven agent UX.
+And it should not try to become a bad clone of interactive Agent Mode features like per-tab sessions, Oracle questioning, image attachments, workflow-driven agent UX, or the IDE Mode Compose/Chat/Apply/Review experience.
 
 ## Repo Prompt skills vs OpenClaw skills
 

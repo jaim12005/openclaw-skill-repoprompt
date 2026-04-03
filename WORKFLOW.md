@@ -14,30 +14,34 @@ Routing rule:
 
 Core flow:
 1) Bind by repo path
-2) Choose the right workflow shape up front
+2) Decide whether this is an IDE-manual task or an MCP/agent task
+   - IDE/manual lane when you want hand-curated context, copy presets, built-in chat, or Apply/Review control
+   - MCP/agent lane when you want automation, workflows, Oracle, or long-running agent sessions
+3) Choose the right workflow shape up front
    - `Plan & Build` for most implementation work
    - `Review` before committing or when auditing diffs
    - `Investigate` for debugging and root-cause work
    - `Refactor` for cleanup/restructure while preserving behavior
    - `ChatGPT Export` when you want an external second opinion
-3) Let the workflow own the protocol when you use one
+4) Let the workflow own the protocol when you use one
    - the workflow should handle discovery vs implementation sequencing
    - use Oracle follow-ups when the workflow benefits from architectural clarification
    - in external agents, `/repo` is often the fastest way to discover the available Repo Prompt workflow commands
-4) Anchor selection (small, full content)
-5) Use `context_builder` for discovery-heavy work
+5) Anchor selection (small, full content)
+6) Use `context_builder` for discovery-heavy work
    - `clarify` for curated context only
    - `plan` for implementation planning
    - `question` for grounded answers
    - `review` for git-aware review output
-6) Add codemap_only or slices only where they help token discipline
-7) Export prompt/context only if an artifact is useful
-8) Choose execution lane:
+7) Add codemap_only or slices only where they help token discipline
+8) Export prompt/context only if an artifact is useful
+9) Choose execution lane:
+   - IDE lane: Compose → Chat or Copy → Apply → Review
    - MCP direct lane: `apply_edits`, `file_actions`, `git`, `read_file`, `workspace_context`, `oracle_send`
    - Agent lane: `agent_manage` / `agent_run` with a workflow like `Plan & Build`, `Review`, `Refactor`, or `Investigate`
    - rpflow lane: wrapper-driven shell automation when retry/fallback/report-json/export behavior matters
-9) For risky edits, require edit review before apply
-10) Verify in Repo Prompt diff/review mode, iterate
+10) For risky edits, require edit review before apply
+11) Verify in Repo Prompt diff/review mode, iterate
 
 Recommended scripts:
 - scripts/preflight.sh (fast validation)

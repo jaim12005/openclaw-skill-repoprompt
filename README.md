@@ -1,7 +1,7 @@
 # OpenClaw Skill: repoprompt
 
 ## Overview
-Automate Repo Prompt for repo discovery, context building, prompt exports, code review, Agent Mode, and multi-root workspace analysis.
+Automate Repo Prompt for repo discovery, context building, prompt exports, code review, Agent Mode, IDE Mode manual workflows, and multi-root workspace analysis.
 
 Current stance:
 - MCP-native Repo Prompt tools are the primary interface
@@ -49,6 +49,7 @@ Routing strategy on this machine:
 - Artifact discipline: use rpflow exports only when you actually need a reproducible shell artifact
 
 ## High-value current features to actually use
+- IDE Mode is the manual-control lane: Compose, Chat, Apply, Review
 - Context Builder is a two-stage system: discovery agent first, analysis model second
 - `context_builder` response types matter: `clarify`, `plan`, `question`, `review`
 - Oracle Chat lets agents ask grounded repo questions mid-session and works best as an ongoing conversation
@@ -58,6 +59,8 @@ Routing strategy on this machine:
 - Some MCP clients expose workflow skills like `/rp-build`, `/rp-review`, `/rp-refactor`, `/rp-investigate`, `/rp-oracle-export`
 - In Claude Code, `/repo` is the quick discovery entrypoint for installed Repo Prompt commands
 - Codemaps are tree-sitter-backed signatures and are the reason Repo Prompt can include dramatically more reference files at sane token cost
+- Line slices and the real-time token counter are core IDE-mode tools, not trivia
+- Copy presets matter: Standard, Plan, XML Edit / Pro Edit, MCP Builder, MCP Pair, MCP Agent
 - Multi-root workspaces are first-class and matter for monorepos, microservices, and adjacent repos
 - Optional edit review is real and should stay on for risky work
 - CLI Providers mean Repo Prompt can often use existing Claude / ChatGPT / Google subscriptions
