@@ -7,8 +7,9 @@ WORKSPACE=""
 BIND_PATH=""
 SELECT_SET=""
 CODEMAP_SET=""
-COPY_PRESET=""
+TASK=""
 OUT=""
+COPY_PRESET="${RP_PLAN_COPY_PRESET:-mcpPlan}"
 PROFILE="${RP_PROFILE:-normal}"
 PREFLIGHT_REPORT_JSON=""
 STRICT=0
@@ -23,17 +24,15 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 usage() {
   cat <<'USAGE'
 Usage:
-  export-prompt.sh [-w WINDOW_ID] [-t TAB] [--workspace NAME] [--bind REPO_DIR]
-                   --select-set PATHS --out FILE
-                   [--codemap PATHS] [--slice SPEC] [--copy-preset PRESET]
-                   [--profile fast|normal|deep] [--preflight-report-json FILE] [--strict]
+  plan-task.sh [-w WINDOW_ID] [-t TAB] [--workspace NAME] [--bind REPO_DIR]
+               --select-set PATHS --task TEXT --out FILE
+               [--codemap PATHS] [--slice SPEC] [--copy-preset PRESET]
+               [--profile fast|normal|deep] [--preflight-report-json FILE] [--strict]
 
 Notes:
-  - PATHS are comma-separated (e.g. src/,lib/)
-  - --bind resolves the matching Repo Prompt workspace by repo path for this invocation
-  - --codemap adds codemap_only reference context
+  - Thin MCP-first planning wrapper: optional repo-path routing -> select -> context_builder(plan) -> export
+  - --copy-preset defaults to mcpPlan; set it explicitly to override
   - --slice format: path:start-end[:description]
-  - Defaults: RP_WINDOW/RP_TAB/RP_WORKSPACE when set; otherwise rpflow auto-resolves from the active Repo Prompt binding/state
 USAGE
 }
 
@@ -46,8 +45,9 @@ while [[ $# -gt 0 ]]; do
     --select-set) SELECT_SET="$2"; shift 2 ;;
     --codemap) CODEMAP_SET="$2"; shift 2 ;;
     --slice) SLICE_SPECS+=("$2"); shift 2 ;;
-    --copy-preset) COPY_PRESET="$2"; shift 2 ;;
+    --task) TASK="$2"; shift 2 ;;
     --out) OUT="$2"; shift 2 ;;
+    --copy-preset) COPY_PRESET="$2"; shift 2 ;;
     --profile) PROFILE="$2"; shift 2 ;;
     --preflight-report-json) PREFLIGHT_REPORT_JSON="$2"; shift 2 ;;
     --strict) STRICT=1; shift ;;
@@ -60,7 +60,7 @@ if [[ -z "$WINDOW" ]]; then WINDOW="$DEFAULT_WINDOW"; fi
 if [[ -z "$TAB" ]]; then TAB="$DEFAULT_TAB"; fi
 if [[ -z "$WORKSPACE" ]]; then WORKSPACE="$DEFAULT_WORKSPACE"; fi
 
-if [[ -z "$SELECT_SET" || -z "$OUT" ]]; then
+if [[ -z "$SELECT_SET" || -z "$TASK" || -z "$OUT" ]]; then
   echo "Missing required args" >&2
   usage
   exit 2
@@ -71,7 +71,7 @@ case "$PROFILE" in
   *) echo "Invalid --profile: $PROFILE (use fast|normal|deep)" >&2; exit 2 ;;
 esac
 
-FLOW_ARGS=(--select-set "$SELECT_SET" --out "$OUT" --profile "$PROFILE")
+FLOW_ARGS=(--select-set "$SELECT_SET" --task "$TASK" --builder-type plan --out "$OUT" --profile "$PROFILE")
 if [[ -n "$WINDOW" ]]; then FLOW_ARGS+=(--window "$WINDOW"); fi
 if [[ -n "$TAB" ]]; then FLOW_ARGS+=(--tab "$TAB"); fi
 if [[ -n "$WORKSPACE" ]]; then FLOW_ARGS+=(--workspace "$WORKSPACE"); fi
@@ -87,4 +87,4 @@ if (( ${#SLICE_SPECS[@]} > 0 )); then
 fi
 
 bash "$SCRIPT_DIR/context-flow.sh" "${FLOW_ARGS[@]}"
-echo "Exported to: $OUT" >&2
+echo "Plan exported to: $OUT" >&2

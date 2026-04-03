@@ -656,10 +656,13 @@ For repo work:
 ## Wrappers in this skill
 
 - `scripts/preflight.sh` — quick rpflow health check using current binding unless you pin routing
+- `scripts/bind-repo.sh` — explicit repo-path → workspace switch helper for shell wrappers
 - `scripts/rpflow.sh` — wrapper into the local rpflow repo
 - `scripts/rp.sh` — thin `rpflow exec` wrapper
-- `scripts/export-prompt.sh` — selection → export helper
+- `scripts/export-prompt.sh` — bind/select/codemap/slice → export helper
+- `scripts/plan-task.sh` — thin MCP-first planning wrapper (`context_builder plan` + export)
 - `scripts/plan-export.sh` — autopilot wrapper for plan + export with retry/fallback
+- `scripts/review-current-changes.sh` — review wrapper that can auto-select changed files from a git repo and export a review artifact
 - `scripts/context-flow.sh` — curated context-building shell flow
 - `scripts/agent-safe.sh` — safe Agent Mode kickoff wrapper using `agent_run`
 - `scripts/report-summary.sh` — compact reader for rpflow JSON reports

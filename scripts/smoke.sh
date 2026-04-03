@@ -14,7 +14,7 @@ for f in scripts/*.sh; do
 done
 
 echo "[2/4] wrapper help"
-for f in scripts/agent-safe.sh scripts/bootstrap-github.sh scripts/context-flow.sh scripts/export-prompt.sh scripts/plan-export.sh scripts/preflight.sh scripts/report-summary.sh scripts/rp.sh scripts/rpflow.sh; do
+for f in scripts/agent-safe.sh scripts/bind-repo.sh scripts/bootstrap-github.sh scripts/context-flow.sh scripts/export-prompt.sh scripts/plan-export.sh scripts/plan-task.sh scripts/preflight.sh scripts/report-summary.sh scripts/review-current-changes.sh scripts/rp.sh scripts/rpflow.sh; do
   echo "### $(basename "$f")"
   bash "$f" --help | sed -n '1,12p'
 done

@@ -61,7 +61,7 @@ case "$PROFILE" in
 esac
 
 auto_select_window_if_needed() {
-  if [[ -n "$WINDOW" || "$STRICT" -eq 1 ]]; then
+  if [[ -n "$WINDOW" || -n "$WORKSPACE" || "$STRICT" -eq 1 ]]; then
     return 0
   fi
 

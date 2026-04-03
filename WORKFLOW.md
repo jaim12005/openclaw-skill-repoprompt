@@ -64,10 +64,13 @@ Context hygiene reminders:
 
 Recommended scripts:
 - scripts/preflight.sh (fast validation)
+- scripts/bind-repo.sh (explicit repo-path → workspace switch)
 - bash scripts/context-flow.sh (shell-friendly context flow)
+- bash scripts/export-prompt.sh (bind/select/codemap/slice + export)
+- bash scripts/plan-task.sh (thin planning wrapper)
 - bash scripts/plan-export.sh (plan + export with retry/fallback)
+- bash scripts/review-current-changes.sh (auto-detect changed files + review export)
 - scripts/agent-safe.sh (plan-export + Agent safety prompt + Agent Mode kickoff via `agent_run`)
-- scripts/export-prompt.sh (selection + export)
 
 Examples:
 - Full flow on the OpenClaw workspace root:
@@ -79,10 +82,17 @@ Examples:
     --out /tmp/rp-context.md
 
 - Plan-only export on the repoprompt skill repo itself:
-  bash scripts/plan-export.sh \
+  bash scripts/plan-task.sh \
+    --bind "$PWD" \
     --select-set "README.md,SKILL.md,scripts/" \
-    --task "Update the skill for MCP-first Repo Prompt guidance" \
+    --task "Plan the next MCP-first wrapper cleanup" \
     --out /tmp/rp-plan.md
+
+- Review the current working tree of the bound repo:
+  bash scripts/review-current-changes.sh \
+    --bind "$PWD" \
+    --scope both \
+    --out /tmp/rp-review.md
 
 - Agent-safe kickoff (recommended for risky work):
   bash scripts/agent-safe.sh \
