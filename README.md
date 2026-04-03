@@ -50,11 +50,13 @@ Routing strategy on this machine:
 
 ## High-value current features to actually use
 - Context Builder is a two-stage system: discovery agent first, analysis model second
+- `context_builder` response types matter: `clarify`, `plan`, `question`, `review`
 - Oracle Chat lets agents ask grounded repo questions mid-session and works best as an ongoing conversation
 - Agent Mode sessions are per-tab, so parallel tasks can stay isolated
 - Built-in workflows matter: `Plan & Build`, `Review`, `Refactor`, `Investigate`, `ChatGPT Export`
 - Workflow protocols are the point: they separate discovery from implementation so the agent's reasoning budget is spent on the solution instead of orientation noise
 - Some MCP clients expose workflow skills like `/rp-build`, `/rp-review`, `/rp-refactor`, `/rp-investigate`, `/rp-oracle-export`
+- In Claude Code, `/repo` is the quick discovery entrypoint for installed Repo Prompt commands
 - Codemaps are tree-sitter-backed signatures and are the reason Repo Prompt can include dramatically more reference files at sane token cost
 - Multi-root workspaces are first-class and matter for monorepos, microservices, and adjacent repos
 - Optional edit review is real and should stay on for risky work

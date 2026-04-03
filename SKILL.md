@@ -124,6 +124,8 @@ It is the core two-stage pipeline:
 1. a discovery agent explores the repo, including codemaps and slices where useful, and curates the relevant files
 2. an analysis model turns that curated context into a plan, review, answer, or investigation result
 
+This separation is the whole trick: the implementation agent stays focused on acting, while Context Builder burns the exploration budget.
+
 Prefer `context_builder` over hand-rolled builder command strings when you want Repo Prompt to discover relevant files.
 
 ```bash
@@ -132,6 +134,12 @@ rp-cli -c context_builder -j '{
   "response_type": "plan"
 }'
 ```
+
+Useful `response_type` values:
+- `clarify` = curated context only
+- `plan` = implementation plan grounded in repo reality
+- `question` = answer a deep codebase question
+- `review` = code review with git-context awareness
 
 ### 4) Export context or select a prompt preset
 
@@ -205,6 +213,7 @@ The agent does not have to reinvent the approach from scratch every time.
 
 Repo Prompt also exposes workflow-oriented slash-command style affordances in some MCP clients, such as `/rp-build`, `/rp-review`, `/rp-refactor`, `/rp-investigate`, and `/rp-oracle-export`.
 Treat those as first-class current product behavior, not trivia.
+In Claude Code specifically, telling the user/agent to type `/repo` is the fast way to discover the installed Repo Prompt command set.
 
 Examples:
 

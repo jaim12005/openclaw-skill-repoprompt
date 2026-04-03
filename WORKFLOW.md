@@ -23,8 +23,13 @@ Core flow:
 3) Let the workflow own the protocol when you use one
    - the workflow should handle discovery vs implementation sequencing
    - use Oracle follow-ups when the workflow benefits from architectural clarification
+   - in external agents, `/repo` is often the fastest way to discover the available Repo Prompt workflow commands
 4) Anchor selection (small, full content)
 5) Use `context_builder` for discovery-heavy work
+   - `clarify` for curated context only
+   - `plan` for implementation planning
+   - `question` for grounded answers
+   - `review` for git-aware review output
 6) Add codemap_only or slices only where they help token discipline
 7) Export prompt/context only if an artifact is useful
 8) Choose execution lane:
