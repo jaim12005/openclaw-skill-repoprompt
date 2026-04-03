@@ -11,6 +11,7 @@ TASK="Review the current changes for correctness, risk, regressions, and missing
 OUT=""
 COPY_PRESET="${RP_REVIEW_COPY_PRESET:-codeReview}"
 PROFILE="${RP_PROFILE:-normal}"
+TIMEOUT="${RP_BUILDER_TIMEOUT:-300}"
 PREFLIGHT_REPORT_JSON=""
 SCOPE="both"
 STRICT=0
@@ -29,7 +30,8 @@ Usage:
                             [--select-set PATHS] --out FILE
                             [--scope worktree|staged|both] [--task TEXT]
                             [--codemap PATHS] [--slice SPEC] [--copy-preset PRESET]
-                            [--profile fast|normal|deep] [--preflight-report-json FILE] [--strict]
+                            [--profile fast|normal|deep] [--timeout SECONDS]
+                            [--preflight-report-json FILE] [--strict]
 
 Notes:
   - If --select-set is omitted, the script auto-detects changed files from the routed repo
@@ -54,6 +56,7 @@ while [[ $# -gt 0 ]]; do
     --scope) SCOPE="$2"; shift 2 ;;
     --copy-preset) COPY_PRESET="$2"; shift 2 ;;
     --profile) PROFILE="$2"; shift 2 ;;
+    --timeout) TIMEOUT="$2"; shift 2 ;;
     --preflight-report-json) PREFLIGHT_REPORT_JSON="$2"; shift 2 ;;
     --strict) STRICT=1; shift ;;
     -h|--help) usage; exit 0 ;;
@@ -75,6 +78,11 @@ case "$PROFILE" in
   fast|normal|deep) ;;
   *) echo "Invalid --profile: $PROFILE (use fast|normal|deep)" >&2; exit 2 ;;
 esac
+
+if [[ -n "$TIMEOUT" ]] && ! [[ "$TIMEOUT" =~ ^[0-9]+$ ]] ; then
+  echo "Invalid --timeout: $TIMEOUT (use integer seconds)" >&2
+  exit 2
+fi
 
 case "$SCOPE" in
   worktree|staged|both) ;;
@@ -145,6 +153,7 @@ if [[ -n "$WINDOW" ]]; then FLOW_ARGS+=(--window "$WINDOW"); fi
 if [[ -n "$TAB" ]]; then FLOW_ARGS+=(--tab "$TAB"); fi
 if [[ -n "$WORKSPACE" ]]; then FLOW_ARGS+=(--workspace "$WORKSPACE"); fi
 if [[ -n "$BIND_PATH" ]]; then FLOW_ARGS+=(--bind "$BIND_PATH"); fi
+if [[ -n "$TIMEOUT" ]]; then FLOW_ARGS+=(--timeout "$TIMEOUT"); fi
 if [[ -n "$CODEMAP_SET" ]]; then FLOW_ARGS+=(--codemap "$CODEMAP_SET"); fi
 if [[ -n "$COPY_PRESET" ]]; then FLOW_ARGS+=(--copy-preset "$COPY_PRESET"); fi
 if [[ -n "$PREFLIGHT_REPORT_JSON" ]]; then FLOW_ARGS+=(--preflight-report-json "$PREFLIGHT_REPORT_JSON"); fi

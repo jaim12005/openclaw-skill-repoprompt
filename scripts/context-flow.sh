@@ -12,6 +12,7 @@ TASK=""
 BUILDER_TYPE=""
 COPY_PRESET=""
 PROFILE="${RP_PROFILE:-normal}"
+TIMEOUT=""
 PREFLIGHT_REPORT_JSON=""
 STRICT=0
 SLICE_SPECS=()
@@ -26,7 +27,7 @@ Usage:
   context-flow.sh [-w WINDOW_ID] [-t TAB] [--workspace NAME] [--bind REPO_DIR] \
     --select-set PATHS --out FILE \
     [--task TEXT] [--builder-type clarify|question|plan|review] \
-    [--copy-preset PRESET] [--profile fast|normal|deep] \
+    [--copy-preset PRESET] [--profile fast|normal|deep] [--timeout SECONDS] \
     [--preflight-report-json FILE] [--codemap PATHS] [--slice SPEC ...] [--strict]
 
 Notes:
@@ -53,6 +54,7 @@ while [[ $# -gt 0 ]]; do
     --builder-type) BUILDER_TYPE="$2"; shift 2 ;;
     --copy-preset) COPY_PRESET="$2"; shift 2 ;;
     --profile) PROFILE="$2"; shift 2 ;;
+    --timeout) TIMEOUT="$2"; shift 2 ;;
     --preflight-report-json) PREFLIGHT_REPORT_JSON="$2"; shift 2 ;;
     --out) OUT="$2"; shift 2 ;;
     --strict) STRICT=1; shift ;;
@@ -82,6 +84,15 @@ case "$PROFILE" in
   fast|normal|deep) ;;
   *) echo "Invalid --profile: $PROFILE (use fast|normal|deep)" >&2; exit 2 ;;
 esac
+
+if [[ -n "$TIMEOUT" ]] && ! [[ "$TIMEOUT" =~ ^[0-9]+$ ]] ; then
+  echo "Invalid --timeout: $TIMEOUT (use integer seconds)" >&2
+  exit 2
+fi
+
+if [[ -z "$TIMEOUT" && -n "$TASK" ]]; then
+  TIMEOUT=300
+fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
@@ -222,6 +233,7 @@ RPF_ARGS=(exec --profile "$PROFILE" -e "$CMD")
 if [[ -n "$WINDOW" ]]; then RPF_ARGS+=(--window "$WINDOW"); fi
 if [[ -n "$TAB" ]]; then RPF_ARGS+=(--tab "$TAB"); fi
 if [[ -n "$WORKSPACE" ]]; then RPF_ARGS+=(--workspace "$WORKSPACE"); fi
+if [[ -n "$TIMEOUT" ]]; then RPF_ARGS+=(--timeout "$TIMEOUT"); fi
 if [[ "$STRICT" -eq 1 ]]; then RPF_ARGS+=(--strict); fi
 
 "$SCRIPT_DIR/rpflow.sh" "${RPF_ARGS[@]}"

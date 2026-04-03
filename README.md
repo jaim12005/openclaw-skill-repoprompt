@@ -250,6 +250,7 @@ Useful wrappers:
 - `./scripts/export-prompt.sh --bind /absolute/path/to/repo --select-set "README.md,scripts/" --copy-preset mcpBuilder --out /tmp/context.md`
 - `./scripts/plan-task.sh --bind /absolute/path/to/repo --select-set "README.md,SKILL.md,scripts/" --task "Plan the wrapper cleanup" --out /tmp/plan.md`
 - `./scripts/review-current-changes.sh --bind /absolute/path/to/repo --out /tmp/review.md`
+- Builder-heavy wrappers default to a longer timeout (`RP_BUILDER_TIMEOUT` / `--timeout`, default 300s) because Context Builder is often slower than ordinary CLI calls.
 - `./scripts/rpflow.sh autopilot --select-set repo/src/ --task "draft plan" --out /tmp/plan.md --fallback-export-on-timeout`
 - `./scripts/rpflow.sh autopilot --profile fast --select-set repo/src/ --task "draft plan" --out /tmp/plan.md --retry-on-timeout --fallback-export-on-timeout`
 - `./scripts/agent-safe.sh --select-set "repo/src/" --task "implement X safely" --out /tmp/rp-agent-safe.md --reasoning medium --mode plan`
