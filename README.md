@@ -149,6 +149,8 @@ rp-cli -e 'select set src/'
 rp-cli -e 'select add file.swift:10-50'
 rp-cli -e 'builder "find auth code"'
 rp-cli -e 'chat "How does this work?"'
+rp-cli -e 'git status'
+rp-cli -e 'agent_manage op=list_workflows'
 rp-cli -e 'workspace list'
 rp-cli -e 'tabs create "Bugfix"'
 
@@ -163,12 +165,17 @@ rp-cli -c oracle_send -j '{"message":"What code path actually performs login?","
 # 5) Discover tool docs from the terminal when needed
 rp-cli -d manage_selection
 rp-cli -d chat_send --verbose
+rp-cli -d agent_run
 
-# 6) JSON-heavy edit/file actions stay clearer in call form
+# 6) Parameter styles are flexible
+rp-cli -e 'search "TODO" --extensions .swift --context-lines 3'
+rp-cli -e 'file_search pattern=TODO filter.extensions=[".swift"]'
+
+# 7) JSON-heavy edit/file actions stay clearer in call form
 rp-cli -e 'call apply_edits {"path":"src/f.ts","search":"old","replace":"new"}'
 rp-cli -e 'call file_actions {"action":"create","path":"src/new.ts"}'
 
-# 7) Use rpflow when you want shell-level reliability helpers
+# 8) Use rpflow when you want shell-level reliability helpers
 ./scripts/rpflow.sh autopilot \
   --profile fast \
   --select-set repo/src/ \

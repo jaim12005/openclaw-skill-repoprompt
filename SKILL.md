@@ -169,8 +169,10 @@ Whether you reached Repo Prompt through `rp-cli` or direct MCP, the selected fil
 - exec mode (`-e '...'`) is the primary shell/agent mode
 - shorthand commands map onto MCP tools, so `select`, `builder`, `chat`, `plan`, `review`, `search`, `tree`, `git`, `workspace`, `tabs`, `chats`, `prompt`, and friends are fair game
 - `rp-cli -d <tool>` is the fast way to inspect parameter docs from the terminal
+- advanced/policy-gated control-plane tools like `agent_run` / `agent_manage` can be driven directly through `rp-cli` too when available
 - for deterministic automation and complex payloads, prefer raw JSON calls (`-c ... -j ...`)
 - for tools like `apply_edits` / `file_actions`, JSON-style invocation is the reliable path
+- parameter syntax is flexible: shorthand flags, `key=value`, dotted keys for nested objects, or full raw JSON via `call`
 
 ## Preferred MCP-first workflow
 
@@ -215,6 +217,32 @@ For JSON-heavy edits, direct call forms are the reliable lane:
 rp-cli -e 'call apply_edits {"path":"src/f.ts","search":"old","replace":"new"}'
 rp-cli -e 'call file_actions {"action":"create","path":"src/new.ts"}'
 ```
+
+Git and agent-control examples are fair game in exec mode too:
+
+```bash
+rp-cli -e 'git status'
+rp-cli -e 'git diff --files'
+rp-cli -e 'git log --count 10'
+rp-cli -e 'agent_manage op=list_agents'
+rp-cli -e 'agent_manage op=list_workflows'
+rp-cli -e 'agent_run op=start message="Investigate auth"'
+```
+
+Parameter syntax examples:
+
+```bash
+rp-cli -e 'search "TODO" --extensions .swift --context-lines 3'
+rp-cli -e 'file_search pattern=TODO mode=content max_results=20'
+rp-cli -e 'manage_selection op=set paths=["src/","lib/"]'
+rp-cli -e 'file_search pattern=TODO filter={"extensions":[".swift",".ts"]}'
+rp-cli -e 'file_search pattern=TODO filter.extensions=[".swift"]'
+```
+
+Quoting rule of thumb:
+- single quotes keep content literal
+- double quotes process escapes like `\n`, `\t`, `\r`, `\\`, and `\"`
+- for complex multiline content, prefer JSON call form
 
 But for automation that needs unambiguous payloads, prefer raw JSON forms.
 
