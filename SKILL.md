@@ -63,6 +63,12 @@ Important product constraints:
 - file selection/workspaces, own API keys, and CLI Providers are available more broadly
 - if a requested workflow depends on MCP/Agent/Context Builder/Codemaps, assume Pro is required unless the product docs say otherwise
 
+Important setup/control-plane surfaces in Repo Prompt itself:
+- the MCP popover/status dashboard is the primary place to enable the server, inspect status, manage clients, and adjust tool availability
+- chat model presets control what `list_models` / MCP chat flows expose to clients
+- the Context Builder agent setting controls whether Codex, Claude, or Gemini powers `context_builder`
+- Repo Prompt can install/copy MCP config for popular clients directly from the UI
+
 So do not default to old habits like:
 - assuming workspace `GitHub`
 - assuming tab `T1`
@@ -264,6 +270,8 @@ Repo Prompt can install built-in workflow skills for terminal agents too, so ext
 That includes built-in skills like `/rp-build`, `/rp-review`, `/rp-refactor`, `/rp-investigate`, and `/rp-oracle-export` when installed.
 In Agent Mode itself, use either a workflow or a slash skill for a message, not both.
 
+A practical special case: `claude-rp` is a Repo Prompt-provided Claude Code wrapper that boots Claude Code against Repo Prompt MCP directly and disables Claude's built-in file-operation tools, so Claude leans on Repo Prompt's codemaps/slices/selection machinery instead of wasting context on raw file ops.
+
 ## rpflow commands that still matter
 
 From `/Users/clawdbot/Documents/github/repoprompt-rpflow-cli`:
@@ -285,7 +293,8 @@ Do not hardcode `GitHub` / `T1` unless you actually mean it.
 Useful setup shorthand:
 - enable the MCP server in Repo Prompt settings
 - use the MCP popover/dashboard as the primary control point when possible
-- prefer Repo Prompt's install/copy-config actions for clients like Cursor, Claude Code, or Codex CLI
+- prefer Repo Prompt's install/copy-config actions for clients like Cursor, VS Code, Codex CLI, Gemini CLI, Claude Desktop, or Claude Code
+- install `rp-cli` from Repo Prompt settings when you need terminal access to MCP tools
 - restart the client after first setup if it cached an empty tool list
 - approve the connection in Repo Prompt when prompted
 
@@ -299,6 +308,7 @@ Architecture/security notes that matter operationally:
 - only one Repo Prompt window owns the MCP server at a time
 - `agent_run` / `agent_manage` are advanced control-plane tools and may be policy-gated on some connections
 - the MCP dashboard can show active clients and disconnect stale ones when needed
+- status UI matters: Server Off / Listening / Connecting / Connected / Tool Running are meaningful operational states
 
 ## Local defaults on this machine
 

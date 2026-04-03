@@ -18,6 +18,11 @@ Current stance:
 - rp-cli on PATH
 - rpflow repo available at $HOME/Documents/github/repoprompt-rpflow-cli
 
+Setup/control-plane notes:
+- install `rp-cli` from Repo Prompt settings when needed
+- the MCP popover/dashboard is the primary place to enable the server, inspect connections, and manage tool availability
+- Repo Prompt can install/copy MCP config for popular clients like Cursor, VS Code, Codex CLI, Gemini CLI, Claude Desktop, and Claude Code
+
 Quick launch helpers:
 - `open -a "Repo Prompt" /path/to/folder`
 - `open "repoprompt://open?path=/path/to/folder"`
@@ -64,7 +69,7 @@ In Agent Mode, use either a workflow or a slash skill per message, not both.
 
 ## MCP server quick realities
 - setup/approval happens in Repo Prompt, not rpflow
-- use the MCP popover/dashboard for quick setup, auto-start, enabled tools, and connection visibility
+- use the MCP popover/dashboard for quick setup, auto-start, enabled tools, model presets, context-builder agent selection, and connection visibility
 - if a client shows 0 tools right after setup, restart it so it refreshes the tool list
 - the normal transport is local-only with no open TCP ports exposed
 - per-user isolation is the expected security model for the socket/session path
@@ -72,6 +77,9 @@ In Agent Mode, use either a workflow or a slash skill per message, not both.
 - only one Repo Prompt window owns the MCP server at a time
 - advanced tools like `agent_run` / `agent_manage` can be policy-gated on some connections
 - Repo Prompt is the local control plane; rpflow is just the shell helper downstream of that
+
+Useful extra note:
+- `claude-rp` is a Repo Prompt wrapper for Claude Code that forces Claude through Repo Prompt's MCP tools instead of Claude's own file-operation tools
 
 ## Agent Mode provider reality
 - Codex CLI is the recommended Agent Mode provider
