@@ -69,6 +69,13 @@ Important setup/control-plane surfaces in Repo Prompt itself:
 - chat model presets control what `list_models` / MCP chat flows expose to clients
 - the Context Builder agent setting controls whether Codex, Claude, or Gemini powers `context_builder`
 - Repo Prompt can install/copy MCP config for popular clients directly from the UI
+- provider setup also lives in Repo Prompt itself: direct API providers, CLI providers, OpenRouter, custom OpenAI-compatible providers, and OpenAI custom base URLs
+
+Provider lane rule of thumb:
+- direct API keys for your main production models when you want the cleanest native path
+- CLI providers when you want to use existing subscriptions economically
+- OpenRouter when you want model variety or occasional/fallback access
+- custom providers for self-hosted, company-internal, proxy, or OpenAI-compatible endpoints
 
 So do not default to old habits like:
 - assuming workspace `GitHub`
@@ -193,10 +200,41 @@ Useful `response_type` values:
 - `question` = answer a deep codebase question
 - `review` = code review with git-context awareness
 
+Deep review note:
+- the review lane is valuable because it maps surrounding files/dependencies and catches issues that isolated diff reviews miss
+- use it before commit when possible, while fixes are still cheap
+
 Budget reality:
 - the default builder budget is calibrated around ChatGPT Pro-style paste flows
 - most models have an effective context window smaller than the advertised max
 - codemaps + slices + manual refinement are how you stay in the useful zone instead of shoveling tokens blindly
+
+### 3.5) Use git-aware review when the task is about changes
+
+Repo Prompt's git/review surface is one of the highest-value reasons to use it instead of a dumb diff-only flow.
+
+Use:
+- `git` for `status`, `diff`, `log`, `show`, and `blame`
+- `Review` / `/rp-review` when you want deep review grounded in the surrounding codebase, not just isolated line changes
+
+Useful compare scopes include:
+- uncommitted changes
+- staged changes
+- recent commits like `back:3`
+- branch comparisons like `main...HEAD`
+
+Important nuance:
+- multi-root workspaces can review/query multiple repos
+- git worktrees are supported, including `:worktree` / `:main` targeting
+- Jujutsu (`jj`) repos are supported too; staged/unstaged concepts collapse into the jj-style working-copy reality
+
+Examples:
+
+```bash
+rp-cli -c git -j '{"op":"status"}'
+rp-cli -c git -j '{"op":"diff","compare":"staged","detail":"files"}'
+rp-cli -c git -j '{"op":"log","count":5}'
+```
 
 ### 4) Export context or select a prompt preset
 
@@ -306,6 +344,13 @@ Also remember:
 Repo Prompt can use CLI-provider-backed models too.
 That means Agent Mode, Chat Mode, and Context Builder can ride existing Claude / ChatGPT / Google subscriptions in supported setups instead of requiring separate API billing for everything.
 That is one of the strongest reasons to prefer the real Repo Prompt surfaces over homegrown wrappers when those surfaces are available.
+
+Provider guidance in practice:
+- CLI providers are the cost-leverage lane when you already pay for the subscriptions
+- OpenRouter is great for experimentation, variety, and fallback access
+- direct native providers are usually the better primary lane for your most important models
+- custom providers/custom base URLs are the right answer for self-hosted or company OpenAI-compatible endpoints
+
 That is product-important and worth documenting, but it does not change the core ordering here: MCP first, rpflow second.
 
 Use `rpflow` when you need shell-friendly automation with:

@@ -29,6 +29,7 @@ Core flow:
    - `Investigate` for debugging and root-cause work
    - `Refactor` for cleanup/restructure while preserving behavior
    - `ChatGPT Export` when you want an external second opinion
+   - if the task is review-heavy, define compare scope early: uncommitted, staged, `back:N`, or branch-vs-branch
 5) Let the workflow own the protocol when you use one
    - the workflow should handle discovery vs implementation sequencing
    - use Oracle follow-ups when the workflow benefits from architectural clarification
@@ -56,8 +57,10 @@ Core flow:
 
 Context hygiene reminders:
 - use git diffs when recent changes are the point
+- for deep reviews, prefer the review workflow or `/rp-review` over ad hoc diff staring
 - prefer effective-context discipline over max-context bragging rights
 - for larger tasks, plan first and implement second instead of asking one model to improvise the whole thing in one pass
+- when a workspace spans multiple repos/worktrees/jj roots, be explicit about which repo state you are actually reviewing
 
 Recommended scripts:
 - scripts/preflight.sh (fast validation)

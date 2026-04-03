@@ -22,6 +22,7 @@ Setup/control-plane notes:
 - install `rp-cli` from Repo Prompt settings when needed
 - the MCP popover/dashboard is the primary place to enable the server, inspect connections, and manage tool availability
 - Repo Prompt can install/copy MCP config for popular clients like Cursor, VS Code, Codex CLI, Gemini CLI, Claude Desktop, and Claude Code
+- provider/model setup also lives there: direct API providers, CLI providers, OpenRouter, custom OpenAI-compatible providers, and OpenAI custom base URLs
 
 Quick launch helpers:
 - `open -a "Repo Prompt" /path/to/folder`
@@ -64,9 +65,13 @@ Routing strategy on this machine:
 - Line slices and the real-time token counter are core IDE-mode tools, not trivia
 - Copy presets matter: Standard, Plan, XML Edit / Pro Edit, MCP Builder, MCP Pair, MCP Agent, Diff Follow-up
 - Git diff inclusion is a first-class prompt-building tool when you need recent-change context
+- Review mode and `/rp-review` are high-value because they bring surrounding architecture into the review instead of staring at isolated diffs
 - Multi-root workspaces are first-class and matter for monorepos, microservices, and adjacent repos
+- Git worktrees and Jujutsu repos are supported too
 - Optional edit review is real and should stay on for risky work
 - CLI Providers mean Repo Prompt can often use existing Claude / ChatGPT / Google subscriptions
+- OpenRouter is good for variety/occasional use; direct providers are usually better as the primary lane
+- Custom providers and OpenAI-compatible endpoints make self-hosted/internal model setups viable
 - Repo Prompt is useful for more than code: any file-heavy workflow where context precision matters can benefit
 - Effective context matters more than advertised max context; codemaps/slices/refinement are how you stay sharp
 
@@ -75,12 +80,14 @@ Routing strategy on this machine:
 - 3+ files / complex change: Architectural Planning first
 - multi-file code changes with review: XML Pro Edit
 - huge iterative tasks: Pair Programming
+- reviewing changes before commit: Review / `/rp-review`
 - hands-off automation: Agent Mode workflows
 
 Helpful manual pattern:
 - use Context Builder first for discovery-heavy work
 - then manually refine the selection before planning, chat, export, or apply/review
 - when continuing existing work, include diffs instead of re-dumping the whole world
+- for review/debug work, be explicit about compare scope: uncommitted, staged, back:N, or branch-vs-branch
 
 ## Repo Prompt skills are not OpenClaw skills
 Repo Prompt's slash skills are separate from OpenClaw skills.
