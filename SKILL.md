@@ -167,12 +167,15 @@ Whether you reached Repo Prompt through `rp-cli` or direct MCP, the selected fil
 
 `rp-cli` practical notes:
 - exec mode (`-e '...'`) is the primary shell/agent mode
+- interactive mode (`-i`) exists for exploration/debugging when you want a REPL instead of one-shot commands
 - shorthand commands map onto MCP tools, so `select`, `builder`, `chat`, `plan`, `review`, `search`, `tree`, `git`, `workspace`, `tabs`, `chats`, `prompt`, and friends are fair game
 - `rp-cli -d <tool>` is the fast way to inspect parameter docs from the terminal
 - advanced/policy-gated control-plane tools like `agent_run` / `agent_manage` can be driven directly through `rp-cli` too when available
+- commands can be chained with `&&` inside a single `-e` invocation, and shell-style output redirection (`>`) is useful for exports/snapshots
 - for deterministic automation and complex payloads, prefer raw JSON calls (`-c ... -j ...`)
 - for tools like `apply_edits` / `file_actions`, JSON-style invocation is the reliable path
 - parameter syntax is flexible: shorthand flags, `key=value`, dotted keys for nested objects, or full raw JSON via `call`
+- `-j/--json` can read inline JSON, `.json` files, `@file`, or `@-` stdin
 
 ## Preferred MCP-first workflow
 
@@ -229,6 +232,24 @@ rp-cli -e 'agent_manage op=list_workflows'
 rp-cli -e 'agent_run op=start message="Investigate auth"'
 ```
 
+Chat lifecycle shorthand matters too:
+
+```bash
+rp-cli -e 'chat "Follow-up question"'
+rp-cli -e 'chat "New topic" --new'
+rp-cli -e 'plan "Design auth system"'
+rp-cli -e 'review "Check this code"'
+rp-cli -e 'plan "Continue planning" --continue'
+```
+
+Chaining/redirection examples:
+
+```bash
+rp-cli -e 'workspace MyProject && select set src/ && context --all'
+rp-cli -e 'tree > /tmp/structure.txt'
+rp-cli -e 'workspace MyProject && context > ~/Desktop/context.md'
+```
+
 Parameter syntax examples:
 
 ```bash
@@ -243,6 +264,12 @@ Quoting rule of thumb:
 - single quotes keep content literal
 - double quotes process escapes like `\n`, `\t`, `\r`, `\\`, and `\"`
 - for complex multiline content, prefer JSON call form
+- `-j` input paths can be inline JSON, a `.json` file, `@file`, or `@-` for stdin
+- Repo Prompt auto-repairs raw newlines/tabs inside JSON string values in some CLI paths, but do not rely on that when you can send proper JSON cleanly
+
+Chat default nuance:
+- `chat` continues the current chat unless you pass `--new`
+- `plan` and `review` start new chats by default unless you explicitly continue
 
 But for automation that needs unambiguous payloads, prefer raw JSON forms.
 

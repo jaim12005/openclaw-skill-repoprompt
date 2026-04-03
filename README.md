@@ -149,12 +149,17 @@ rp-cli -e 'select set src/'
 rp-cli -e 'select add file.swift:10-50'
 rp-cli -e 'builder "find auth code"'
 rp-cli -e 'chat "How does this work?"'
+rp-cli -e 'plan "Design auth system"'
 rp-cli -e 'git status'
 rp-cli -e 'agent_manage op=list_workflows'
 rp-cli -e 'workspace list'
 rp-cli -e 'tabs create "Bugfix"'
 
-# 3) Deterministic JSON-style usage for automation
+# 3) Chaining and redirection are part of the appeal
+rp-cli -e 'workspace MyProject && select set src/ && context --all'
+rp-cli -e 'tree > /tmp/structure.txt'
+
+# 4) Deterministic JSON-style usage for automation
 rp-cli -c manage_selection -j '{"op":"clear"}'
 rp-cli -c manage_selection -j '{"op":"add","paths":["src/","README.md"]}'
 rp-cli -c context_builder -j '{"instructions":"<task>draft plan</task>","response_type":"plan"}'
@@ -162,20 +167,28 @@ rp-cli -c context_builder -j '{"instructions":"<task>draft plan</task>","respons
 # 4) Ask a grounded repo question mid-session when useful
 rp-cli -c oracle_send -j '{"message":"What code path actually performs login?","mode":"plan"}'
 
-# 5) Discover tool docs from the terminal when needed
+# 6) Discover tool docs from the terminal when needed
 rp-cli -d manage_selection
 rp-cli -d chat_send --verbose
 rp-cli -d agent_run
 
-# 6) Parameter styles are flexible
+# 7) Parameter styles are flexible
 rp-cli -e 'search "TODO" --extensions .swift --context-lines 3'
 rp-cli -e 'file_search pattern=TODO filter.extensions=[".swift"]'
 
-# 7) JSON-heavy edit/file actions stay clearer in call form
+# 8) Chat semantics matter
+rp-cli -e 'chat "Follow-up question"'
+rp-cli -e 'chat "New topic" --new'
+rp-cli -e 'plan "Continue planning" --continue'
+
+# 9) JSON-heavy edit/file actions stay clearer in call form
 rp-cli -e 'call apply_edits {"path":"src/f.ts","search":"old","replace":"new"}'
 rp-cli -e 'call file_actions {"action":"create","path":"src/new.ts"}'
 
-# 8) Use rpflow when you want shell-level reliability helpers
+# 10) Interactive mode exists for exploration/debugging
+rp-cli -i
+
+# 11) Use rpflow when you want shell-level reliability helpers
 ./scripts/rpflow.sh autopilot \
   --profile fast \
   --select-set repo/src/ \
