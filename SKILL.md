@@ -92,6 +92,11 @@ rp-cli -c get_code_structure -j '{"paths":["src/auth/"]}'
 
 ### 3) Use Context Builder for discovery-heavy work
 
+Context Builder is not just a convenience wrapper.
+It is the core two-stage pipeline:
+1. a discovery agent explores the repo and curates the relevant files
+2. an analysis model turns that curated context into a plan, review, answer, or investigation result
+
 Prefer `context_builder` over hand-rolled builder command strings when you want Repo Prompt to discover relevant files.
 
 ```bash
@@ -121,7 +126,14 @@ rp-cli -c prompt -j '{"op":"select_preset","preset":"mcpBuilder"}'
 rp-cli -c workspace_context -j '{"op":"export","path":"/tmp/repo-context.md","copy_preset":"mcpBuilder"}'
 ```
 
-### 5) Use Agent Mode intentionally
+### 5) Use Oracle Chat and Agent Mode intentionally
+
+Oracle Chat is useful when you want to ask Repo Prompt questions about the codebase mid-session without manually rebuilding context yourself.
+Use:
+- `oracle_send` for the actual question / plan / review turn
+- `oracle_utils` for models and session helpers
+
+That is especially useful when an agent needs a second opinion or a grounded repo answer while already working.
 
 Agent Mode now centers on:
 - `agent_manage` for agent/model/workflow discovery and session management
@@ -140,6 +152,15 @@ Built-in workflows currently include:
 - `Investigate`
 - `ChatGPT Export`
 
+These matter because they are not all the same thing:
+- `Plan & Build` = Context Builder + plan + implementation
+- `Review` = git-aware review with repo context
+- `Refactor` = analyze first, then preserve behavior while restructuring
+- `Investigate` = evidence-gathering until root cause is clear
+
+Repo Prompt also exposes workflow-oriented slash-command style affordances in some MCP clients, such as `/rp-build`, `/rp-review`, and `/rp-investigate`.
+Treat those as first-class current product behavior, not trivia.
+
 Examples:
 
 ```bash
@@ -156,7 +177,17 @@ rp-cli -c agent_run -j '{
 
 For follow-up turns on an existing Agent Mode session, use `agent_run` with `steer` or `respond`, not a fake new-chat flow.
 
-## When rpflow is still worth using
+Also remember:
+- each compose tab effectively owns its own agent session context
+- optional edit review is a real product feature and should stay enabled for risky work
+- image support is part of interactive Agent Mode, not something rpflow should pretend to wrap
+- session management and usage tracking live on the Agent Mode side, not in rpflow
+
+## CLI providers and when rpflow is still worth using
+
+Repo Prompt can use CLI-provider-backed models too.
+That means Agent Mode, Chat Mode, and Context Builder can ride existing Claude / ChatGPT / Google subscriptions in supported setups instead of requiring separate API billing for everything.
+That is product-important and worth documenting, but it does not change the core ordering here: MCP first, rpflow second.
 
 Use `rpflow` when you need shell-friendly automation with:
 - deterministic routing from scripts
@@ -172,6 +203,7 @@ That makes rpflow a good fit for:
 - environments where you want one stable shell surface over changing Repo Prompt UI details
 
 It is not required for ordinary MCP-driven Repo Prompt work.
+And it should not try to become a bad clone of interactive Agent Mode features like per-tab sessions, Oracle questioning, image attachments, or workflow-driven agent UX.
 
 ## rpflow commands that still matter
 
