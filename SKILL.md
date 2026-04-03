@@ -167,7 +167,7 @@ Whether you reached Repo Prompt through `rp-cli` or direct MCP, the selected fil
 
 `rp-cli` practical notes:
 - exec mode (`-e '...'`) is the primary shell/agent mode
-- shorthand commands map onto MCP tools, so `select`, `builder`, `chat`, `search`, `tree`, `git`, and friends are fair game
+- shorthand commands map onto MCP tools, so `select`, `builder`, `chat`, `plan`, `review`, `search`, `tree`, `git`, `workspace`, `tabs`, `chats`, `prompt`, and friends are fair game
 - `rp-cli -d <tool>` is the fast way to inspect parameter docs from the terminal
 - for deterministic automation and complex payloads, prefer raw JSON calls (`-c ... -j ...`)
 - for tools like `apply_edits` / `file_actions`, JSON-style invocation is the reliable path
@@ -195,10 +195,25 @@ With `rp-cli`, remember that window/tab targeting is usually explicit per invoca
 Manual exec-style examples are fine when speed matters:
 
 ```bash
-rp-cli -e 'manage_selection op=set paths=["src/"]'
-rp-cli -e 'chat_send message="How does this work?"'
-rp-cli -e 'context_builder task="find auth code"'
-rp-cli -e 'context_builder task="explain auth" response_type=question'
+rp-cli -e 'select set src/'
+rp-cli -e 'select add lib/utils.ts'
+rp-cli -e 'select add file.swift:10-50'
+rp-cli -e 'builder "find auth code"'
+rp-cli -e 'builder "explain auth" --type question'
+rp-cli -e 'chat "How does this work?"'
+rp-cli -e 'plan "Design auth system"'
+rp-cli -e 'review'
+rp-cli -e 'workspace list'
+rp-cli -e 'tabs create "Bugfix"'
+rp-cli -e 'chats list --scope tab'
+rp-cli -e 'prompt export ~/context.md'
+```
+
+For JSON-heavy edits, direct call forms are the reliable lane:
+
+```bash
+rp-cli -e 'call apply_edits {"path":"src/f.ts","search":"old","replace":"new"}'
+rp-cli -e 'call file_actions {"action":"create","path":"src/new.ts"}'
 ```
 
 But for automation that needs unambiguous payloads, prefer raw JSON forms.

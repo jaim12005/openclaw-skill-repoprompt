@@ -145,8 +145,12 @@ rp-cli -c bind_context -j '{
 }'
 
 # 2) Quick shell-style usage via exec mode
-rp-cli -e 'manage_selection op=set paths=["src/"]'
-rp-cli -e 'chat_send message="How does this work?"'
+rp-cli -e 'select set src/'
+rp-cli -e 'select add file.swift:10-50'
+rp-cli -e 'builder "find auth code"'
+rp-cli -e 'chat "How does this work?"'
+rp-cli -e 'workspace list'
+rp-cli -e 'tabs create "Bugfix"'
 
 # 3) Deterministic JSON-style usage for automation
 rp-cli -c manage_selection -j '{"op":"clear"}'
@@ -160,7 +164,11 @@ rp-cli -c oracle_send -j '{"message":"What code path actually performs login?","
 rp-cli -d manage_selection
 rp-cli -d chat_send --verbose
 
-# 6) Use rpflow when you want shell-level reliability helpers
+# 6) JSON-heavy edit/file actions stay clearer in call form
+rp-cli -e 'call apply_edits {"path":"src/f.ts","search":"old","replace":"new"}'
+rp-cli -e 'call file_actions {"action":"create","path":"src/new.ts"}'
+
+# 7) Use rpflow when you want shell-level reliability helpers
 ./scripts/rpflow.sh autopilot \
   --profile fast \
   --select-set repo/src/ \
