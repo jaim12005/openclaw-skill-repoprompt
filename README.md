@@ -1,7 +1,7 @@
 # OpenClaw Skill: repoprompt
 
 ## Overview
-Automate Repo Prompt for repo discovery, context building, prompt exports, code review, and Agent Mode.
+Automate Repo Prompt for repo discovery, context building, prompt exports, code review, Agent Mode, and multi-root workspace analysis.
 
 Current stance:
 - MCP-native Repo Prompt tools are the primary interface
@@ -17,6 +17,10 @@ Current stance:
 - MCP Server enabled in Repo Prompt settings
 - rp-cli on PATH
 - rpflow repo available at $HOME/Documents/github/repoprompt-rpflow-cli
+
+Feature gating worth knowing:
+- MCP Server, Agent Mode, Context Builder, and Codemaps are Repo Prompt Pro features
+- file selection/workspaces, own API keys, and CLI Providers are available more broadly
 
 Optional env defaults:
 - RP_WORKSPACE, RP_TAB, RP_WINDOW
@@ -41,8 +45,11 @@ Routing strategy on this machine:
 - Agent Mode sessions are per-tab, so parallel tasks can stay isolated
 - Built-in workflows matter: `Plan & Build`, `Review`, `Refactor`, `Investigate`
 - Some MCP clients expose workflow skills like `/rp-build`, `/rp-review`, `/rp-investigate`
+- Codemaps are tree-sitter-backed signatures and are the reason Repo Prompt can include dramatically more reference files at sane token cost
+- Multi-root workspaces are first-class and matter for monorepos, microservices, and adjacent repos
 - Optional edit review is real and should stay on for risky work
 - CLI Providers mean Repo Prompt can often use existing Claude / ChatGPT / Google subscriptions
+- Repo Prompt is useful for more than code: any file-heavy workflow where context precision matters can benefit
 
 ## Install (OpenClaw)
 1) Clone this repo into `~/.openclaw/workspace/skills/repoprompt` for workspace-local install, or `~/.openclaw/skills/repoprompt` for shared install.

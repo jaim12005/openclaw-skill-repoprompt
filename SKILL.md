@@ -12,6 +12,8 @@ Use this skill when you want Repo Prompt to help with:
 - targeted file selection and prompt exports
 - code review and git-aware analysis
 - agentic coding loops in Repo Prompt Agent Mode
+- multi-root workspace analysis across related repos/services
+- non-code file/document exploration where precise context control still matters
 - deterministic shell automation when an export/report/fallback artifact matters
 
 ## Rule of thumb
@@ -47,6 +49,11 @@ Current Repo Prompt exposes rich MCP tools directly, including:
 - `oracle_send`
 - `oracle_utils`
 
+Important product constraints:
+- MCP Server, Agent Mode, Context Builder, and Codemaps are Pro features
+- file selection/workspaces, own API keys, and CLI Providers are available more broadly
+- if a requested workflow depends on MCP/Agent/Context Builder/Codemaps, assume Pro is required unless the product docs say otherwise
+
 So do not default to old habits like:
 - assuming workspace `GitHub`
 - assuming tab `T1`
@@ -80,6 +87,11 @@ Use:
 - `file_search`, `get_file_tree`, `get_code_structure`, and `read_file` for discovery
 - `git` for diff/log/show/blame context
 
+Why this matters:
+- codemaps are tree-sitter-backed signatures, which lets Repo Prompt include far more reference files with far fewer tokens
+- slices are the precision tool when full-file context would be wasteful
+- multi-root workspaces let the same flow span monorepos, service fleets, or related repos cleanly
+
 Examples:
 
 ```bash
@@ -94,7 +106,7 @@ rp-cli -c get_code_structure -j '{"paths":["src/auth/"]}'
 
 Context Builder is not just a convenience wrapper.
 It is the core two-stage pipeline:
-1. a discovery agent explores the repo and curates the relevant files
+1. a discovery agent explores the repo, including codemaps and slices where useful, and curates the relevant files
 2. an analysis model turns that curated context into a plan, review, answer, or investigation result
 
 Prefer `context_builder` over hand-rolled builder command strings when you want Repo Prompt to discover relevant files.
@@ -138,6 +150,12 @@ That is especially useful when an agent needs a second opinion or a grounded rep
 Agent Mode now centers on:
 - `agent_manage` for agent/model/workflow discovery and session management
 - `agent_run` for start/poll/wait/steer/respond
+
+Key Agent Mode characteristics worth actually using:
+- native session host for CLI agents like Codex, Claude Code, and Gemini CLI
+- per-tab sessions, so parallel work can stay isolated
+- live streaming and Context Builder integration
+- token-efficient MCP tools instead of wasteful built-in equivalents when available
 
 Role labels you can pass as `model_id`:
 - `explore`
@@ -187,6 +205,7 @@ Also remember:
 
 Repo Prompt can use CLI-provider-backed models too.
 That means Agent Mode, Chat Mode, and Context Builder can ride existing Claude / ChatGPT / Google subscriptions in supported setups instead of requiring separate API billing for everything.
+That is one of the strongest reasons to prefer the real Repo Prompt surfaces over homegrown wrappers when those surfaces are available.
 That is product-important and worth documenting, but it does not change the core ordering here: MCP first, rpflow second.
 
 Use `rpflow` when you need shell-friendly automation with:
