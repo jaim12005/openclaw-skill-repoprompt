@@ -11,12 +11,16 @@ Current stance:
 
 ## Requirements
 - OpenClaw 2026.2.x (or newer in same compatibility band)
-- macOS (Repo Prompt app)
+- macOS (Repo Prompt app; Repo Prompt is currently macOS-only)
 - python3
 - Repo Prompt app running
 - MCP Server enabled in Repo Prompt settings
 - rp-cli on PATH
 - rpflow repo available at $HOME/Documents/github/repoprompt-rpflow-cli
+
+Quick launch helpers:
+- `open -a "Repo Prompt" /path/to/folder`
+- `open "repoprompt://open?path=/path/to/folder"`
 
 Feature gating worth knowing:
 - MCP Server, Agent Mode, Context Builder, and Codemaps are Repo Prompt Pro features
@@ -50,6 +54,13 @@ Routing strategy on this machine:
 - Optional edit review is real and should stay on for risky work
 - CLI Providers mean Repo Prompt can often use existing Claude / ChatGPT / Google subscriptions
 - Repo Prompt is useful for more than code: any file-heavy workflow where context precision matters can benefit
+
+## Agent Mode provider reality
+- Codex CLI is the recommended Agent Mode provider
+- Claude Code is full-featured and integrates deeply with MCP
+- Claude Code GLM is available when a Z.AI API key is configured in Repo Prompt settings
+- Gemini CLI is still beta and currently lacks some Agent Mode capabilities like compaction and bash-tool parity
+- first-time provider setup/testing belongs in the Repo Prompt app settings/onboarding flow, not rpflow
 
 ## Install (OpenClaw)
 1) Clone this repo into `~/.openclaw/workspace/skills/repoprompt` for workspace-local install, or `~/.openclaw/skills/repoprompt` for shared install.

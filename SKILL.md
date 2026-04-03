@@ -16,6 +16,11 @@ Use this skill when you want Repo Prompt to help with:
 - non-code file/document exploration where precise context control still matters
 - deterministic shell automation when an export/report/fallback artifact matters
 
+Repo Prompt itself is macOS-only.
+If the app is not open yet, useful launch patterns are:
+- `open -a "Repo Prompt" /path/to/folder`
+- `open "repoprompt://open?path=/path/to/folder"`
+
 ## Rule of thumb
 
 Use Repo Prompt in this order:
@@ -157,6 +162,12 @@ Key Agent Mode characteristics worth actually using:
 - live streaming and Context Builder integration
 - token-efficient MCP tools instead of wasteful built-in equivalents when available
 
+Provider reality check:
+- Codex CLI is the recommended lane: native app-server integration, strong agent control, compaction support, configurable tool preferences, and reasoning effort settings
+- Claude Code is a solid full-featured lane with compaction and deep MCP integration
+- Claude Code GLM is available via the Claude Code infrastructure when a Z.AI API key is configured
+- Gemini CLI is still beta and currently lacks some capabilities like compaction and bash-tool parity
+
 Role labels you can pass as `model_id`:
 - `explore`
 - `engineer`
@@ -200,6 +211,7 @@ Also remember:
 - optional edit review is a real product feature and should stay enabled for risky work
 - image support is part of interactive Agent Mode, not something rpflow should pretend to wrap
 - session management and usage tracking live on the Agent Mode side, not in rpflow
+- first-time setup/testing for providers happens in the Repo Prompt app itself; the onboarding wizard and provider settings are the right place to verify connections
 
 ## CLI providers and when rpflow is still worth using
 
