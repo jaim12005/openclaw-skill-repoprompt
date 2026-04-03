@@ -7,8 +7,8 @@ WORKSPACE=""
 CMD=""
 
 DEFAULT_WINDOW="${RP_WINDOW:-}"
-DEFAULT_WORKSPACE="${RP_WORKSPACE:-GitHub}"
-DEFAULT_TAB="${RP_TAB:-T1}"
+DEFAULT_WORKSPACE="${RP_WORKSPACE:-}"
+DEFAULT_TAB="${RP_TAB:-}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
@@ -19,13 +19,13 @@ Usage:
 
 Notes:
   - rpflow-first wrapper around `rpflow exec`
-  - If -t/--tab is omitted, defaults to RP_TAB (or T1)
+  - If -t/--tab is omitted, uses RP_TAB when set; otherwise rpflow auto-resolves the active tab
   - If -w/--window is omitted, defaults to RP_WINDOW if set
-  - Workspace defaults to RP_WORKSPACE (or GitHub)
+  - Workspace uses RP_WORKSPACE when set; otherwise rpflow auto-resolves the active workspace
 
 Examples:
   rp.sh -e 'windows'
-  rp.sh --workspace GitHub -e 'tree --folders'
+  rp.sh -e 'tree --folders'
   rp.sh -w 1 -t T1 --workspace MyRepo -e 'select set src/ && builder "Find auth code" --type plan'
 USAGE
 }

@@ -2,8 +2,8 @@
 set -euo pipefail
 
 RPFLOW_REPO="${RPFLOW_REPO:-$HOME/Documents/github/repoprompt-rpflow-cli}"
-DEFAULT_WORKSPACE="${RP_WORKSPACE:-GitHub}"
-DEFAULT_TAB="${RP_TAB:-T1}"
+DEFAULT_WORKSPACE="${RP_WORKSPACE:-}"
+DEFAULT_TAB="${RP_TAB:-}"
 DEFAULT_PROFILE="${RP_PROFILE:-normal}"
 
 usage() {
@@ -13,7 +13,7 @@ Usage:
 
 Examples:
   rpflow.sh doctor
-  rpflow.sh smoke --workspace GitHub --tab T1
+  rpflow.sh smoke
   rpflow.sh exec -e 'tabs'
   rpflow.sh call --tool apply_edits --json-arg @edits.json
   rpflow.sh autopilot --select-set repo/src/ --task "draft plan" --out /tmp/plan.md
@@ -21,7 +21,7 @@ Examples:
 Behavior:
   - Runs rpflow from RPFLOW_REPO (default: $HOME/Documents/github/repoprompt-rpflow-cli)
   - Injects default --profile (RP_PROFILE or normal) when not provided
-  - For exec/call/export/plan-export/autopilot/smoke, injects default --workspace/--tab when not provided
+  - For exec/call/export/plan-export/autopilot/smoke, injects --workspace/--tab only when provided via env or args; otherwise rpflow auto-resolves from the active Repo Prompt binding/state
 USAGE
 }
 
@@ -73,14 +73,10 @@ elif ! has_flag "--profile" "${ARGS[@]}"; then
 fi
 
 if needs_route_defaults; then
-  if (( ${#ARGS[@]} == 0 )); then
-    ARGS=(--workspace "$DEFAULT_WORKSPACE")
-  elif ! has_flag "--workspace" "${ARGS[@]}"; then
+  if [[ -n "$DEFAULT_WORKSPACE" ]] && ! has_flag "--workspace" "${ARGS[@]}"; then
     ARGS=(--workspace "$DEFAULT_WORKSPACE" "${ARGS[@]}")
   fi
-  if (( ${#ARGS[@]} == 0 )); then
-    ARGS=(--tab "$DEFAULT_TAB")
-  elif ! has_flag "--tab" "${ARGS[@]}"; then
+  if [[ -n "$DEFAULT_TAB" ]] && ! has_flag "--tab" "${ARGS[@]}"; then
     ARGS=(--tab "$DEFAULT_TAB" "${ARGS[@]}")
   fi
 fi

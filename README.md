@@ -1,14 +1,13 @@
 # OpenClaw Skill: repoprompt
 
 ## Overview
-Automate Repo Prompt (rpflow + MCP + Agent Mode) for context building, file selection, chat_send, edits, and exports.
+Automate Repo Prompt for repo discovery, context building, prompt exports, code review, and Agent Mode.
 
-This skill is hybrid and rpflow-first:
-- rpflow is the deterministic orchestration interface (routing, selection, exports)
-- Repo Prompt Agent (2.0) is the interactive coding loop
-- raw rp-cli is fallback/debug only
-- most wrappers in scripts/ delegate to rpflow
-- bootstrap-github.sh is the setup-time exception
+Current stance:
+- MCP-native Repo Prompt tools are the primary interface
+- raw `rp-cli` is the direct shell bridge into those MCP tools
+- `rpflow` is now the optional deterministic shell companion for retries, reports, exports, and scripted flows
+- Agent Mode runs should use the modern `agent_manage` / `agent_run` surface
 
 ## Requirements
 - OpenClaw 2026.2.x (or newer in same compatibility band)
@@ -22,17 +21,19 @@ This skill is hybrid and rpflow-first:
 Optional env defaults:
 - RP_WORKSPACE, RP_TAB, RP_WINDOW
 - RP_PROFILE (fast|normal|deep; default normal)
+- RP_AGENT_MODEL_ID (for `agent-safe.sh`; default `engineer`)
 
-Workspace strategy on this machine:
-- `GitHub` is the normal default for repos under `~/Documents/github`.
-- Repos outside that root should get their own Repo Prompt workspace (for example `OpenClawWorkspace`, `RepoPromptSkill`, `BraveSkill`, `RPFlowCLI`).
-- This is especially important for skill repos under `~/.openclaw/workspace/skills`, because they may not resolve from the broader OpenClaw workspace root.
+Routing strategy on this machine:
+- Prefer Repo Prompt binding by working directory via `bind_context`
+- Let Repo Prompt's active binding/tab/workspace drive routing unless you intentionally pin RP_WORKSPACE / RP_TAB / RP_WINDOW
+- Do not assume `GitHub` / `T1` unless you explicitly want those
 
-## Repo Prompt 2.0 defaults (recommended)
-- Provider: Codex first (native integration), Claude Code/Gemini fallback when needed.
-- Reasoning effort: low (quick scans), medium (default), high (complex multi-file work).
-- Approval/edit review: enable for risky/destructive/broad edits.
-- Artifact discipline: keep rpflow exports as reproducible checkpoints for agent sessions.
+## Recommended defaults
+- MCP-first for normal work: `bind_context`, `manage_selection`, `context_builder`, `workspace_context`, `agent_manage`, `agent_run`
+- Provider: Codex-first agent routing; use Repo Prompt role labels like `engineer` / `pair` unless you need a concrete model_id
+- Reasoning effort: low (quick scans), medium (default), high (complex multi-file work)
+- Approval/edit review: enable for risky/destructive/broad edits
+- Artifact discipline: use rpflow exports only when you actually need a reproducible shell artifact
 
 ## Install (OpenClaw)
 1) Clone this repo into `~/.openclaw/workspace/skills/repoprompt` for workspace-local install, or `~/.openclaw/skills/repoprompt` for shared install.
@@ -44,16 +45,29 @@ Workspace strategy on this machine:
 ```bash
 bash scripts/smoke.sh
 bash scripts/smoke.sh --offline
+rp-cli --raw-json -e 'windows'
+rp-cli -c agent_manage -j '{"op":"list_workflows"}'
 ```
 
-## 2-minute quickstart (community)
+## 2-minute quickstart
 
 ```bash
-# 1) Smoke check
-./scripts/rpflow.sh smoke --report-json /tmp/rpflow-smoke.json
-# expected: tabs: ok / context: ok / tools-schema: ok
+# 1) Bind Repo Prompt to the repo you actually care about
+rp-cli -c bind_context -j '{
+  "op":"bind",
+  "working_dirs":["/absolute/path/to/repo"],
+  "create_if_missing":true
+}'
 
-# 2) End-to-end plan/export
+# 2) Build context with MCP-native tools
+rp-cli -c manage_selection -j '{"op":"clear"}'
+rp-cli -c manage_selection -j '{"op":"add","paths":["src/","README.md"]}'
+rp-cli -c context_builder -j '{"instructions":"<task>draft plan</task>","response_type":"plan"}'
+
+# 3) Export only if you need an artifact
+rp-cli -c workspace_context -j '{"op":"export","path":"/tmp/repo-context.md","copy_preset":"mcpBuilder"}'
+
+# 4) Use rpflow when you want shell-level reliability helpers
 ./scripts/rpflow.sh autopilot \
   --profile fast \
   --select-set repo/src/ \
@@ -62,31 +76,27 @@ bash scripts/smoke.sh --offline
   --retry-on-timeout \
   --fallback-export-on-timeout \
   --report-json /tmp/rpflow-plan.json
-
-# 3) Read compact status
-./scripts/report-summary.sh /tmp/rpflow-plan.json
 ```
 
 ## Usage
-See SKILL.md for the hybrid operating model (rpflow deterministic + Agent interactive), command matrix, strict mode, timeout/fallback policy, and wrappers.
+See SKILL.md for the MCP-first operating model and the narrower role rpflow now plays.
 
 Useful wrappers:
 - `./scripts/rpflow.sh smoke`
-- `./scripts/rpflow.sh exec -e 'tabs'`
+- `./scripts/rpflow.sh exec --raw-json -e 'windows'`
 - `./scripts/rpflow.sh autopilot --select-set repo/src/ --task "draft plan" --out /tmp/plan.md --fallback-export-on-timeout`
 - `./scripts/rpflow.sh autopilot --profile fast --select-set repo/src/ --task "draft plan" --out /tmp/plan.md --retry-on-timeout --fallback-export-on-timeout`
-- `./scripts/agent-safe.sh --workspace GitHub --tab T1 --select-set "repo/src/" --task "implement X safely" --out /tmp/rp-agent-safe.md --reasoning medium --mode plan`
-- For OpenClaw skill repos, prefer a dedicated workspace name (for example `RepoPromptSkill`) instead of forcing `GitHub`.
+- `./scripts/agent-safe.sh --select-set "repo/src/" --task "implement X safely" --out /tmp/rp-agent-safe.md --reasoning medium --mode plan`
 - `./scripts/report-summary.sh /tmp/rpflow-*.json`
 
 ## Suggested AGENTS.md / MEMORY.md / TOOLS.md snippets
 
-Add these minimal lines in your OpenClaw workspace docs if you want rpflow-first repo automation behavior.
+Add these minimal lines in your OpenClaw workspace docs if you want MCP-first Repo Prompt behavior with rpflow available for shell automation.
 
 AGENTS.md (repo rule):
-- Use Repo Prompt via rpflow first for any repo planning/reading/searching/editing task.
-- Run `PYTHONPATH=src python3 -m rpflow.cli smoke --workspace GitHub --tab T1 --profile fast --report-json /tmp/rpflow-smoke.json` before major repo automation.
-- After export, use Repo Prompt Agent (2.0) for interactive loops when useful; keep edit review on for risky writes.
+- Use Repo Prompt MCP-native flows first for repo planning/reading/searching/editing tasks; use rpflow for shell automation and exported artifacts.
+- Run `PYTHONPATH=src python3 -m rpflow.cli smoke --profile fast --report-json /tmp/rpflow-smoke.json` before major rpflow automation.
+- After export, use Repo Prompt Agent Mode when useful; keep edit review on for risky writes.
 
 MEMORY.md (long-term defaults):
 - Default repo profile: `--profile normal`; use `fast` for quick checks and `deep` for large/complex runs.
@@ -99,9 +109,9 @@ TOOLS.md (operator runbook):
 - Use `./scripts/report-summary.sh /tmp/rpflow-*.json` to triage failures quickly.
 
 ## Agent-safe wrapper (new)
-- `scripts/agent-safe.sh` is a one-command wrapper for Repo Prompt Agent 2.0 sessions.
-- It runs preflight + plan-export (retry/fallback), sets a safety policy prompt, and optionally starts a new chat.
-- Defaults: Codex-first model preset (`current_chat_model`), reasoning `medium`, mode `plan`.
+- `scripts/agent-safe.sh` is a one-command wrapper for Repo Prompt Agent Mode sessions.
+- It runs preflight + plan-export (retry/fallback), sets a safety policy prompt, and optionally starts a new Agent Mode run.
+- Defaults: Codex-first `engineer` routing, reasoning `medium`, mode `plan`.
 
 ## Troubleshooting
 - `rp-cli not found in PATH`

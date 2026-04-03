@@ -9,7 +9,8 @@ TASK=""
 OUT=""
 MODE="plan"
 REASONING="${RP_AGENT_REASONING:-medium}"
-MODEL="${RP_AGENT_MODEL:-current_chat_model}"
+MODEL_ID="${RP_AGENT_MODEL_ID:-engineer}"
+WORKFLOW_NAME=""
 PROFILE="${RP_PROFILE:-normal}"
 REPORT_JSON=""
 TIMEOUT=""
@@ -22,8 +23,8 @@ NO_CHAT=0
 STRICT=0
 
 DEFAULT_WINDOW="${RP_WINDOW:-}"
-DEFAULT_WORKSPACE="${RP_WORKSPACE:-GitHub}"
-DEFAULT_TAB="${RP_TAB:-T1}"
+DEFAULT_WORKSPACE="${RP_WORKSPACE:-}"
+DEFAULT_TAB="${RP_TAB:-}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
@@ -33,7 +34,7 @@ Usage:
   agent-safe.sh [-w WINDOW_ID] [-t TAB] [--workspace NAME] \
     --select-set PATHS --task TEXT --out FILE \
     [--mode plan|edit|review|chat] [--reasoning low|medium|high] \
-    [--model MODEL_PRESET] [--profile fast|normal|deep] \
+    [--model-id ROLE_OR_MODEL] [--workflow-name NAME] [--profile fast|normal|deep] \
     [--report-json FILE] [--timeout SECONDS] [--preflight-timeout SECONDS] \
     [--retry-timeout SECONDS] [--retry-timeout-scale FLOAT] \
     [--resume-from-export FILE] [--chat-name NAME] [--no-chat] [--strict]
@@ -41,10 +42,11 @@ Usage:
 What it does:
   1) Runs plan-export with retry + timeout fallback
   2) Sets a safety-focused tab prompt for Agent Mode
-  3) Starts a new chat using the tab prompt (unless --no-chat)
+  3) Starts a new Agent Mode run via MCP `agent_run` (unless --no-chat)
 
 Notes:
-  - Codex-first behavior is enforced via prompt policy + model preset default.
+  - `--model-id` accepts Repo Prompt role labels (`explore`, `engineer`, `pair`, `design`) or a concrete model_id from `agent_manage list_agents`.
+  - `--workflow-name` defaults from `--mode` (`Plan & Build`, `Refactor`, `Review`, `Investigate`).
   - Edit review/approval toggles are controlled in Repo Prompt UI; this script
     encodes the policy in the prompt so each run is explicit and auditable.
   - PATHS is comma-separated (e.g. repo/src/,repo/README.md)
@@ -61,7 +63,8 @@ while [[ $# -gt 0 ]]; do
     --out) OUT="$2"; shift 2 ;;
     --mode) MODE="$2"; shift 2 ;;
     --reasoning) REASONING="$2"; shift 2 ;;
-    --model) MODEL="$2"; shift 2 ;;
+    --model|--model-id) MODEL_ID="$2"; shift 2 ;;
+    --workflow-name) WORKFLOW_NAME="$2"; shift 2 ;;
     --profile) PROFILE="$2"; shift 2 ;;
     --report-json) REPORT_JSON="$2"; shift 2 ;;
     --timeout) TIMEOUT="$2"; shift 2 ;;
@@ -81,7 +84,7 @@ if [[ -z "$WINDOW" ]]; then WINDOW="$DEFAULT_WINDOW"; fi
 if [[ -z "$TAB" ]]; then TAB="$DEFAULT_TAB"; fi
 if [[ -z "$WORKSPACE" ]]; then WORKSPACE="$DEFAULT_WORKSPACE"; fi
 
-if [[ -z "$WORKSPACE" || -z "$SELECT_SET" || -z "$TASK" || -z "$OUT" ]]; then
+if [[ -z "$SELECT_SET" || -z "$TASK" || -z "$OUT" ]]; then
   echo "Missing required args" >&2
   usage
   exit 2
@@ -106,10 +109,20 @@ if [[ -z "$CHAT_NAME" ]]; then
   CHAT_NAME="agent-safe-$(date +%Y%m%d-%H%M%S)"
 fi
 
+if [[ -z "$WORKFLOW_NAME" ]]; then
+  case "$MODE" in
+    plan) WORKFLOW_NAME="Plan & Build" ;;
+    edit) WORKFLOW_NAME="Refactor" ;;
+    review) WORKFLOW_NAME="Review" ;;
+    chat) WORKFLOW_NAME="Investigate" ;;
+  esac
+fi
+
 PLAN_ARGS=()
 if [[ -n "$WINDOW" ]]; then PLAN_ARGS+=(--window "$WINDOW"); fi
 if [[ -n "$TAB" ]]; then PLAN_ARGS+=(--tab "$TAB"); fi
-PLAN_ARGS+=(--workspace "$WORKSPACE" --select-set "$SELECT_SET" --task "$TASK" --out "$OUT" --profile "$PROFILE")
+if [[ -n "$WORKSPACE" ]]; then PLAN_ARGS+=(--workspace "$WORKSPACE"); fi
+PLAN_ARGS+=(--select-set "$SELECT_SET" --task "$TASK" --out "$OUT" --profile "$PROFILE")
 if [[ -n "$REPORT_JSON" ]]; then PLAN_ARGS+=(--report-json "$REPORT_JSON"); fi
 if [[ -n "$TIMEOUT" ]]; then PLAN_ARGS+=(--timeout "$TIMEOUT"); fi
 if [[ -n "$PREFLIGHT_TIMEOUT" ]]; then PLAN_ARGS+=(--preflight-timeout "$PREFLIGHT_TIMEOUT"); fi
@@ -129,7 +142,7 @@ cat > "$PROMPT_FILE" <<EOF
 <taskname="Repo Prompt Agent Safe Run"/>
 
 <policy>
-- Provider preference: Codex-first; fallback providers only when Codex is unavailable for this task.
+- Provider preference: Codex-first agent routing. Default model hint: $MODEL_ID.
 - Reasoning effort target: $REASONING.
 - Scope guard: operate only on currently selected files unless expansion is explicitly approved.
 - Approval policy: for risky, broad, or destructive edits, require a plan + explicit approval before editing.
@@ -168,28 +181,30 @@ if [[ "$STRICT" -eq 1 ]]; then RPF_ARGS+=(--strict); fi
 
 if [[ "$NO_CHAT" -eq 1 ]]; then
   echo "Agent-safe setup complete. Context exported to: $OUT" >&2
-  echo "Prompt policy set. Start chat manually when ready." >&2
+  echo "Prompt policy set. Start the agent manually when ready." >&2
   exit 0
 fi
 
-# 3) Start new Agent chat with tab prompt
-CHAT_JSON="$(MODE="$MODE" MODEL="$MODEL" CHAT_NAME="$CHAT_NAME" python3 - <<'PY'
+# 3) Start new Agent Mode run with the policy prompt already set on the tab
+CHAT_JSON="$(MODEL_ID="$MODEL_ID" WORKFLOW_NAME="$WORKFLOW_NAME" CHAT_NAME="$CHAT_NAME" python3 - <<'PY'
 import json, os
 payload = {
-  "new_chat": True,
-  "mode": os.environ["MODE"],
-  "use_tab_prompt": True,
-  "chat_name": os.environ["CHAT_NAME"],
-  "message": "Use tab prompt"
+  "op": "start",
+  "message": "Use the current tab prompt and context artifacts for this run.",
+  "session_name": os.environ["CHAT_NAME"],
+  "timeout": 300,
 }
-model = os.environ.get("MODEL", "").strip()
-if model and model.lower() != "auto":
-  payload["model"] = model
+model_id = os.environ.get("MODEL_ID", "").strip()
+workflow_name = os.environ.get("WORKFLOW_NAME", "").strip()
+if model_id:
+  payload["model_id"] = model_id
+if workflow_name:
+  payload["workflow_name"] = workflow_name
 print(json.dumps(payload))
 PY
 )"
 
-CHAT_ARGS=(call --profile "$PROFILE" --tool chat_send --json-arg "$CHAT_JSON")
+CHAT_ARGS=(call --profile "$PROFILE" --tool agent_run --json-arg "$CHAT_JSON")
 if [[ -n "$WINDOW" ]]; then CHAT_ARGS+=(--window "$WINDOW"); fi
 if [[ -n "$TAB" ]]; then CHAT_ARGS+=(--tab "$TAB"); fi
 if [[ -n "$WORKSPACE" ]]; then CHAT_ARGS+=(--workspace "$WORKSPACE"); fi

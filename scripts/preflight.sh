@@ -10,8 +10,8 @@ REPORT_JSON=""
 STRICT=0
 
 DEFAULT_WINDOW="${RP_WINDOW:-}"
-DEFAULT_TAB="${RP_TAB:-T1}"
-DEFAULT_WORKSPACE="${RP_WORKSPACE:-GitHub}"
+DEFAULT_TAB="${RP_TAB:-}"
+DEFAULT_WORKSPACE="${RP_WORKSPACE:-}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
@@ -32,7 +32,7 @@ Behavior:
   - If multiple windows are found, exits with guidance to set -w / RP_WINDOW
 
 Environment defaults:
-  RP_WINDOW (optional), RP_TAB (default: T1), RP_WORKSPACE (default: GitHub),
+  RP_WINDOW (optional), RP_TAB (optional), RP_WORKSPACE (optional),
   RP_PROFILE (default: normal)
 USAGE
 }
@@ -66,25 +66,34 @@ auto_select_window_if_needed() {
   fi
 
   local windows_out
-  if ! windows_out="$($SCRIPT_DIR/rpflow.sh exec --profile fast -e 'windows' 2>&1)"; then
+  if ! windows_out="$($SCRIPT_DIR/rpflow.sh exec --profile fast --raw-json -e 'windows' 2>&1)"; then
     # Fall through; smoke will emit the actionable error if routing is broken.
     return 0
   fi
 
   local window_ids
   window_ids="$(WINDOWS_OUT="$windows_out" python3 - <<'PY'
-import os, re
-text = os.environ.get('WINDOWS_OUT', '')
+import json, os
+text = os.environ.get('WINDOWS_OUT', '').strip()
 ids = []
-for line in text.splitlines():
-    m = re.search(r'Window `([0-9]+)`', line)
-    if m:
-        ids.append(m.group(1))
-seen = []
-for wid in ids:
-    if wid not in seen:
-        seen.append(wid)
-print(' '.join(seen))
+try:
+    payload = json.loads(text)
+except Exception:
+    print('')
+    raise SystemExit(0)
+windows = payload.get('windows') if isinstance(payload, dict) else payload
+if not isinstance(windows, list):
+    windows = []
+for item in windows:
+    if not isinstance(item, dict):
+        continue
+    wid = item.get('window_id', item.get('windowID'))
+    if wid is None:
+        continue
+    wid = str(wid)
+    if wid not in ids:
+        ids.append(wid)
+print(' '.join(ids))
 PY
 )"
 
@@ -119,4 +128,4 @@ if [[ -n "$WORKSPACE" ]]; then ARGS+=(--workspace "$WORKSPACE"); fi
 
 "$SCRIPT_DIR/rpflow.sh" "${ARGS[@]}" >/dev/null
 
-echo "Repo Prompt OK via rpflow. window=${WINDOW:-auto} tab=$TAB workspace=$WORKSPACE profile=$PROFILE" >&2
+echo "Repo Prompt OK via rpflow. window=${WINDOW:-auto} tab=${TAB:-auto} workspace=${WORKSPACE:-auto} profile=$PROFILE" >&2

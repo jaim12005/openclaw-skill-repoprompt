@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-04-03
+- Repositioned the skill as MCP-first instead of rpflow-first.
+- Rewrote `SKILL.md` around modern Repo Prompt surfaces: `bind_context`, `manage_workspaces`, `manage_selection`, `workspace_context`, `context_builder`, `agent_manage`, and `agent_run`.
+- Updated docs/examples to stop assuming `GitHub` / `T1` as universal defaults.
+- Updated wrapper defaults so omitted workspace/tab values defer to the active Repo Prompt binding/state.
+- Updated `scripts/preflight.sh` to parse current raw `windows` JSON.
+- Updated `scripts/agent-safe.sh` to kick off Agent Mode via MCP `agent_run` instead of the older `chat_send` flow.
+
 ## 2026-03-09
 - Replaced stale `$HOME/clawd/...` wrapper paths with the live `~/.openclaw/workspace/...` equivalents.
 - Updated workflow/docs to explain the real workspace strategy: use `GitHub` for repos under `~/Documents/github`, and dedicated Repo Prompt workspaces for repos under `~/.openclaw/workspace` / `skills/`.

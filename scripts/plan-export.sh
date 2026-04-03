@@ -17,8 +17,8 @@ RESUME_FROM_EXPORT=""
 STRICT=0
 
 DEFAULT_WINDOW="${RP_WINDOW:-}"
-DEFAULT_WORKSPACE="${RP_WORKSPACE:-GitHub}"
-DEFAULT_TAB="${RP_TAB:-T1}"
+DEFAULT_WORKSPACE="${RP_WORKSPACE:-}"
+DEFAULT_TAB="${RP_TAB:-}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
@@ -34,7 +34,7 @@ Notes:
   - PATHS is a comma-separated list (e.g. repo/,src/,README.md)
   - Runs rpflow autopilot (preflight + builder plan + prompt export)
   - Includes retry-on-timeout and fallback export by default
-  - Defaults: RP_WINDOW (optional), RP_TAB (or T1), RP_WORKSPACE (or GitHub), RP_PROFILE (or normal)
+  - Defaults: RP_WINDOW/RP_TAB/RP_WORKSPACE when set; otherwise rpflow auto-resolves from the active Repo Prompt binding/state
 USAGE
 }
 
@@ -63,7 +63,7 @@ if [[ -z "$WINDOW" ]]; then WINDOW="$DEFAULT_WINDOW"; fi
 if [[ -z "$TAB" ]]; then TAB="$DEFAULT_TAB"; fi
 if [[ -z "$WORKSPACE" ]]; then WORKSPACE="$DEFAULT_WORKSPACE"; fi
 
-if [[ -z "$WORKSPACE" || -z "$SELECT_SET" || -z "$TASK" || -z "$OUT" ]]; then
+if [[ -z "$SELECT_SET" || -z "$TASK" || -z "$OUT" ]]; then
   echo "Missing required args" >&2
   usage
   exit 2

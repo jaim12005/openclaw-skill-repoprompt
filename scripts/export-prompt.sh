@@ -13,8 +13,8 @@ SELECT_SET=""
 OUT=""
 
 DEFAULT_WINDOW="${RP_WINDOW:-}"
-DEFAULT_WORKSPACE="${RP_WORKSPACE:-GitHub}"
-DEFAULT_TAB="${RP_TAB:-T1}"
+DEFAULT_WORKSPACE="${RP_WORKSPACE:-}"
+DEFAULT_TAB="${RP_TAB:-}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
@@ -26,7 +26,7 @@ Usage:
 Notes:
   - PATHS can be a comma-separated list (e.g. src/,lib/)
   - Requires Repo Prompt running + MCP Server enabled + rpflow repo available
-  - Defaults: RP_WINDOW (optional), RP_TAB (or T1), RP_WORKSPACE (or GitHub)
+  - Defaults: RP_WINDOW/RP_TAB/RP_WORKSPACE when set; otherwise rpflow auto-resolves from the active Repo Prompt binding/state
 USAGE
 }
 
@@ -46,13 +46,17 @@ if [[ -z "$WINDOW" ]]; then WINDOW="$DEFAULT_WINDOW"; fi
 if [[ -z "$TAB" ]]; then TAB="$DEFAULT_TAB"; fi
 if [[ -z "$WORKSPACE" ]]; then WORKSPACE="$DEFAULT_WORKSPACE"; fi
 
-if [[ -z "$WORKSPACE" || -z "$SELECT_SET" || -z "$OUT" ]]; then
+if [[ -z "$SELECT_SET" || -z "$OUT" ]]; then
   echo "Missing required args" >&2
   usage
   exit 2
 fi
 
-bash "$SCRIPT_DIR/preflight.sh" ${WINDOW:+-w "$WINDOW"} ${TAB:+-t "$TAB"} --workspace "$WORKSPACE" >/dev/null
+PREFLIGHT_ARGS=()
+if [[ -n "$WINDOW" ]]; then PREFLIGHT_ARGS+=(--window "$WINDOW"); fi
+if [[ -n "$TAB" ]]; then PREFLIGHT_ARGS+=(--tab "$TAB"); fi
+if [[ -n "$WORKSPACE" ]]; then PREFLIGHT_ARGS+=(--workspace "$WORKSPACE"); fi
+bash "$SCRIPT_DIR/preflight.sh" "${PREFLIGHT_ARGS[@]}" >/dev/null
 
 ARGS=(export --select-set "$SELECT_SET" --out "$OUT")
 if [[ -n "$WINDOW" ]]; then ARGS+=(--window "$WINDOW"); fi

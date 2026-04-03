@@ -14,8 +14,8 @@ PREFLIGHT_REPORT_JSON=""
 SLICE_SPECS=()
 
 DEFAULT_WINDOW="${RP_WINDOW:-}"
-DEFAULT_TAB="${RP_TAB:-T1}"
-DEFAULT_WORKSPACE="${RP_WORKSPACE:-GitHub}"
+DEFAULT_TAB="${RP_TAB:-}"
+DEFAULT_WORKSPACE="${RP_WORKSPACE:-}"
 
 usage() {
   cat <<'USAGE'
@@ -80,7 +80,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PREFLIGHT_ARGS=()
 if [[ -n "$WINDOW" ]]; then PREFLIGHT_ARGS+=(--window "$WINDOW"); fi
 if [[ -n "$TAB" ]]; then PREFLIGHT_ARGS+=(--tab "$TAB"); fi
-PREFLIGHT_ARGS+=(--workspace "$WORKSPACE" --profile "$PROFILE")
+if [[ -n "$WORKSPACE" ]]; then PREFLIGHT_ARGS+=(--workspace "$WORKSPACE"); fi
+PREFLIGHT_ARGS+=(--profile "$PROFILE")
 if [[ -n "$PREFLIGHT_REPORT_JSON" ]]; then PREFLIGHT_ARGS+=(--report-json "$PREFLIGHT_REPORT_JSON"); fi
 bash "$SCRIPT_DIR/preflight.sh" "${PREFLIGHT_ARGS[@]}" >/dev/null
 
