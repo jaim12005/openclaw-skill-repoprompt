@@ -47,13 +47,26 @@ Routing strategy on this machine:
 - Context Builder is a two-stage system: discovery agent first, analysis model second
 - Oracle Chat lets agents ask grounded repo questions mid-session
 - Agent Mode sessions are per-tab, so parallel tasks can stay isolated
-- Built-in workflows matter: `Plan & Build`, `Review`, `Refactor`, `Investigate`
-- Some MCP clients expose workflow skills like `/rp-build`, `/rp-review`, `/rp-investigate`
+- Built-in workflows matter: `Plan & Build`, `Review`, `Refactor`, `Investigate`, `ChatGPT Export`
+- Workflow protocols are the point: they separate discovery from implementation so the agent's reasoning budget is spent on the solution instead of orientation noise
+- Some MCP clients expose workflow skills like `/rp-build`, `/rp-review`, `/rp-refactor`, `/rp-investigate`, `/rp-oracle-export`
 - Codemaps are tree-sitter-backed signatures and are the reason Repo Prompt can include dramatically more reference files at sane token cost
 - Multi-root workspaces are first-class and matter for monorepos, microservices, and adjacent repos
 - Optional edit review is real and should stay on for risky work
 - CLI Providers mean Repo Prompt can often use existing Claude / ChatGPT / Google subscriptions
 - Repo Prompt is useful for more than code: any file-heavy workflow where context precision matters can benefit
+
+## Repo Prompt skills are not OpenClaw skills
+Repo Prompt's slash skills are separate from OpenClaw skills.
+They are on-disk markdown templates for Agent Mode and terminal agents, discovered from provider-specific folders like `.claude/skills`, `.claude/commands`, `.agents/skills`, and `.agents/slash`.
+Use them when you want Repo Prompt-native reusable workflows like `/rp-build` or your own custom templates.
+
+## MCP server quick realities
+- setup/approval happens in Repo Prompt, not rpflow
+- if a client shows 0 tools right after setup, restart it so it refreshes the tool list
+- only one Repo Prompt window owns the MCP server at a time
+- advanced tools like `agent_run` / `agent_manage` can be policy-gated on some connections
+- Repo Prompt is the local control plane; rpflow is just the shell helper downstream of that
 
 ## Agent Mode provider reality
 - Codex CLI is the recommended Agent Mode provider

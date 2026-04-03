@@ -33,6 +33,10 @@ Bluntly: rpflow is no longer the center of gravity.
 It is the shell companion.
 The live product surface is MCP.
 
+That matters because Repo Prompt's workflows deliberately separate discovery from implementation.
+The Context Builder spends the orientation budget finding the right code.
+The agent then spends its reasoning budget solving the task instead of drowning in grep noise.
+
 ## What changed
 
 Current Repo Prompt exposes rich MCP tools directly, including:
@@ -182,12 +186,13 @@ Built-in workflows currently include:
 - `ChatGPT Export`
 
 These matter because they are not all the same thing:
-- `Plan & Build` = Context Builder + plan + implementation
-- `Review` = git-aware review with repo context
-- `Refactor` = analyze first, then preserve behavior while restructuring
-- `Investigate` = evidence-gathering until root cause is clear
+- `Plan & Build` = quick scan → Context Builder plan → Oracle refinement → implementation
+- `Review` = survey git state → confirm scope → Context Builder review → fill gaps if needed
+- `Refactor` = analyze with review-style context → plan improvements → implement while preserving behavior
+- `Investigate` = assess → explore → deep-dive follow-ups → evidence gathering → findings report
+- `ChatGPT Export` = Context Builder clarify-mode curation → prompt export for an external second opinion
 
-Repo Prompt also exposes workflow-oriented slash-command style affordances in some MCP clients, such as `/rp-build`, `/rp-review`, and `/rp-investigate`.
+Repo Prompt also exposes workflow-oriented slash-command style affordances in some MCP clients, such as `/rp-build`, `/rp-review`, `/rp-refactor`, `/rp-investigate`, and `/rp-oracle-export`.
 Treat those as first-class current product behavior, not trivia.
 
 Examples:
@@ -236,6 +241,22 @@ That makes rpflow a good fit for:
 It is not required for ordinary MCP-driven Repo Prompt work.
 And it should not try to become a bad clone of interactive Agent Mode features like per-tab sessions, Oracle questioning, image attachments, or workflow-driven agent UX.
 
+## Repo Prompt skills vs OpenClaw skills
+
+Do not confuse these.
+
+- This file is an OpenClaw skill about how to use Repo Prompt.
+- Repo Prompt also has its own skills/slash-command system for agents.
+
+Repo Prompt skills are markdown prompt templates discovered from on-disk directories and invoked as slash commands.
+They are separate from OpenClaw skills.
+
+Important locations:
+- Claude Code: `<project>/.claude/skills/`, `<project>/.claude/commands/`, `~/.claude/skills/`, `~/.claude/commands/`
+- Codex CLI / Gemini CLI: `<project>/.agents/skills/`, `<project>/.agents/slash/`, `~/.agents/skills/`, `~/.agents/slash/`
+
+Repo Prompt can install built-in workflow skills for terminal agents too, so external agents can use the same workflow family from slash commands.
+
 ## rpflow commands that still matter
 
 From `/Users/clawdbot/Documents/github/repoprompt-rpflow-cli`:
@@ -251,6 +272,21 @@ python3 -m rpflow.cli call --tool apply_edits --json-arg @edits.json
 
 Important: modern rpflow should follow the active Repo Prompt binding/workspace/tab when you do not explicitly pin them.
 Do not hardcode `GitHub` / `T1` unless you actually mean it.
+
+## MCP server setup and security realities
+
+Useful setup shorthand:
+- enable the MCP server in Repo Prompt settings
+- install/configure the client from Repo Prompt's MCP settings when possible
+- restart the client after first setup if it cached an empty tool list
+- approve the connection in Repo Prompt when prompted
+
+Architecture/security notes that matter operationally:
+- Repo Prompt's MCP path is local-first and macOS-local in practice
+- traffic is brokered through the Repo Prompt app and local IPC rather than exposing random open network services by default
+- connection approval and per-tool enable/disable happen in Repo Prompt, not rpflow
+- only one Repo Prompt window owns the MCP server at a time
+- `agent_run` / `agent_manage` are advanced control-plane tools and may be policy-gated on some connections
 
 ## Local defaults on this machine
 

@@ -14,16 +14,22 @@ Routing rule:
 
 Core flow:
 1) Bind by repo path
-2) Anchor selection (small, full content)
-3) Use `context_builder` for discovery-heavy work
-4) Add codemap_only or slices only where they help token discipline
-5) Export prompt/context only if an artifact is useful
-6) Choose execution lane:
+2) Choose the right workflow shape up front
+   - `Plan & Build` for most implementation work
+   - `Review` before committing or when auditing diffs
+   - `Investigate` for debugging and root-cause work
+   - `Refactor` for cleanup/restructure while preserving behavior
+   - `ChatGPT Export` when you want an external second opinion
+3) Anchor selection (small, full content)
+4) Use `context_builder` for discovery-heavy work
+5) Add codemap_only or slices only where they help token discipline
+6) Export prompt/context only if an artifact is useful
+7) Choose execution lane:
    - MCP direct lane: `apply_edits`, `file_actions`, `git`, `read_file`, `workspace_context`, `oracle_send`
    - Agent lane: `agent_manage` / `agent_run` with a workflow like `Plan & Build`, `Review`, `Refactor`, or `Investigate`
    - rpflow lane: wrapper-driven shell automation when retry/fallback/report-json/export behavior matters
-7) For risky edits, require edit review before apply
-8) Verify in Repo Prompt diff/review mode, iterate
+8) For risky edits, require edit review before apply
+9) Verify in Repo Prompt diff/review mode, iterate
 
 Recommended scripts:
 - scripts/preflight.sh (fast validation)
@@ -60,3 +66,5 @@ Notes:
 - Use slices for tight, high-signal ranges instead of full files.
 - For long agent sessions, keep periodic exports/checkpoints.
 - Prefer `bind_context` and current active routing over stale hardcoded workspace assumptions.
+- In Repo Prompt itself, workflows and slash skills are different tools; use one or the other per message, not both.
+- Repo Prompt slash skills are not OpenClaw skills; they are Repo Prompt-local markdown templates discovered from `.claude/*` or `.agents/*` paths.
