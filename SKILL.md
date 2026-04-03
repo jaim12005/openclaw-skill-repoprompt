@@ -59,6 +59,11 @@ Current Repo Prompt exposes rich MCP tools directly, including:
 - `oracle_send`
 - `oracle_utils`
 
+`rp-cli` matters too.
+Think of it as the shell-facing proxy client for Repo Prompt's MCP surface.
+It talks to the running Repo Prompt app over the local connection path, so shell-capable agents and scripts can use Repo Prompt tools without a full persistent MCP integration.
+You still need Repo Prompt running with MCP Server enabled.
+
 Important product constraints:
 - MCP Server, Agent Mode, Context Builder, and Codemaps are Pro features
 - file selection/workspaces, own API keys, and CLI Providers are available more broadly
@@ -82,6 +87,7 @@ So do not default to old habits like:
 - assuming tab `T1`
 - forcing `workspace switch GitHub`
 - treating `rpflow` as mandatory for every Repo Prompt action
+- forgetting that `rp-cli` is a valid on-demand shell bridge when full MCP binding is overkill
 - using the old `chat_send` naming when Agent Mode now lives behind `agent_run`
 
 ## IDE Mode still matters
@@ -135,6 +141,30 @@ Useful supporting IDE controls:
 - Diff Follow-up style review when you want a planning/review model to inspect what changed without resending the entire codebase
 - filter/ignore tuning when needed so the tree actually shows the files you care about
 
+## rp-cli vs direct MCP
+
+Use `rp-cli` when:
+- the agent has Bash/shell access but not native MCP support
+- you want one-shot on-demand Repo Prompt access without loading MCP tool schemas into the whole session
+- you want shell chaining, redirection, or mixed shell workflows
+- formatted text output is good enough and lower overhead is useful
+
+Use direct MCP when:
+- the agent supports MCP natively
+- persistent tab/window binding matters
+- you want structured tool responses every turn
+- Repo Prompt is a central part of the whole session, not just an occasional side tool
+
+Practical tradeoff summary:
+- `rp-cli` is ephemeral per invocation
+- direct MCP is persistent per session
+- `rp-cli` is great for shell composition
+- direct MCP is better when you want stable bound context over time
+
+Core rule that stays true in both lanes:
+selection is context.
+Whether you reached Repo Prompt through `rp-cli` or direct MCP, the selected files are what chat/review/agent flows actually see.
+
 ## Preferred MCP-first workflow
 
 ### 1) Bind to the right repo
@@ -153,6 +183,7 @@ rp-cli -c bind_context -j '{
 
 Use `bind_context` for routing.
 Use `manage_workspaces` when you truly need workspace inventory or workspace lifecycle.
+With `rp-cli`, remember that window/tab targeting is usually explicit per invocation unless you rely on Repo Prompt's active state or a wrapper like `rpflow`.
 
 ### 2) Build selection deliberately
 

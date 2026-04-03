@@ -5,7 +5,7 @@ Automate Repo Prompt for repo discovery, context building, prompt exports, code 
 
 Current stance:
 - MCP-native Repo Prompt tools are the primary interface
-- raw `rp-cli` is the direct shell bridge into those MCP tools
+- raw `rp-cli` is the direct shell bridge / proxy client into those Repo Prompt tools
 - `rpflow` is now the optional deterministic shell companion for retries, reports, exports, and scripted flows
 - Agent Mode runs should use the modern `agent_manage` / `agent_run` surface
 
@@ -23,6 +23,7 @@ Setup/control-plane notes:
 - the MCP popover/dashboard is the primary place to enable the server, inspect connections, and manage tool availability
 - Repo Prompt can install/copy MCP config for popular clients like Cursor, VS Code, Codex CLI, Gemini CLI, Claude Desktop, and Claude Code
 - provider/model setup also lives there: direct API providers, CLI providers, OpenRouter, custom OpenAI-compatible providers, and OpenAI custom base URLs
+- `rp-cli` still requires the Repo Prompt app running with MCP Server enabled; it is a lighter shell access path, not a separate backend
 
 Quick launch helpers:
 - `open -a "Repo Prompt" /path/to/folder`
@@ -44,6 +45,7 @@ Routing strategy on this machine:
 
 ## Recommended defaults
 - MCP-first for normal work: `bind_context`, `manage_selection`, `context_builder`, `workspace_context`, `oracle_send`, `agent_manage`, `agent_run`
+- Use `rp-cli` when shell/on-demand access is enough and you do not want a full persistent MCP binding
 - Provider: Codex-first agent routing; use Repo Prompt role labels like `engineer` / `pair` unless you need a concrete model_id
 - Reasoning effort: low (quick scans), medium (default), high (complex multi-file work)
 - Approval/edit review: enable for risky/destructive/broad edits
@@ -104,10 +106,11 @@ In Agent Mode, use either a workflow or a slash skill per message, not both.
 - clients can reconnect automatically after temporary Repo Prompt restarts/outages
 - only one Repo Prompt window owns the MCP server at a time
 - advanced tools like `agent_run` / `agent_manage` can be policy-gated on some connections
-- Repo Prompt is the local control plane; rpflow is just the shell helper downstream of that
+- Repo Prompt is the local control plane; `rp-cli` is the lighter shell proxy into it; rpflow is the higher-level reliability wrapper downstream of that
 
-Useful extra note:
+Useful extra notes:
 - `claude-rp` is a Repo Prompt wrapper for Claude Code that forces Claude through Repo Prompt's MCP tools instead of Claude's own file-operation tools
+- selection is context: the tab's selected files are what Repo Prompt chat/agent flows actually see
 
 ## Agent Mode provider reality
 - Codex CLI is the recommended Agent Mode provider
