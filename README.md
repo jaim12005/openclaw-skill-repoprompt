@@ -166,6 +166,9 @@ rp-cli -e 'windows'
 rp-cli -w 1 -e 'tabs'
 rp-cli -w 1 -t "Feature Work" -e 'context'
 
+# MCP-native alternative: bind once per session with manage_workspaces select_tab
+# After direct MCP select_tab, later tool calls stay on that tab until you change it.
+
 # 5) Chaining and redirection are part of the appeal
 rp-cli -e 'workspace MyProject && select set src/ && context --all'
 rp-cli -e 'tree > /tmp/structure.txt'
@@ -188,25 +191,35 @@ rp-cli -e 'file_search pattern=TODO filter.extensions=[".swift"]'
 rp-cli -w 1 -t MyTab --workspace MyProject --select-set src/ --export-prompt ~/out.md
 rp-cli --exec-file ~/scripts/daily-export.rp
 
+# 9.5) Manage workspaces/tabs directly when you need lifecycle control
+rp-cli -c manage_workspaces -j '{"action":"list_tabs"}'
+rp-cli -c manage_workspaces -j '{"action":"create_tab","name":"Bugfix","mode":"blank","bind":true}'
+rp-cli -c manage_workspaces -j '{"action":"select_tab","tab":"Bugfix","focus":true}'
+
 # 10) Chat semantics matter
 rp-cli -e 'chat "Follow-up question"'
 rp-cli -e 'chat "New topic" --new'
 rp-cli -e 'plan "Continue planning" --continue'
 
-# 11) JSON-heavy edit/file actions stay clearer in call form
+# 11) Advanced agent control is there when policy allows it
+rp-cli -c agent_manage -j '{"op":"list_sessions","limit":5}'
+rp-cli -c agent_run -j '{"op":"wait","session_id":"<uuid>","timeout":10}'
+rp-cli -c agent_run -j '{"op":"steer","session_id":"<uuid>","message":"Fix it","wait":true}'
+
+# 12) JSON-heavy edit/file actions stay clearer in call form
 rp-cli -e 'call apply_edits {"path":"src/f.ts","search":"old","replace":"new"}'
 rp-cli -e 'call file_actions {"action":"create","path":"src/new.ts"}'
 
-# 12) Help is tiered
+# 13) Help is tiered
 rp-cli --help
 rp-cli --help-interactive
 rp-cli --help-scripting
 rp-cli --help-advanced
 
-# 13) Interactive mode exists for exploration/debugging
+# 14) Interactive mode exists for exploration/debugging
 rp-cli -i
 
-# 14) Use rpflow when you want shell-level reliability helpers
+# 15) Use rpflow when you want shell-level reliability helpers
 ./scripts/rpflow.sh autopilot \
   --profile fast \
   --select-set repo/src/ \

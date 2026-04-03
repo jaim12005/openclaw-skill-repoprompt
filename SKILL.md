@@ -163,7 +163,7 @@ Practical tradeoff summary:
 
 When multi-window routing gets annoying:
 - raw `rp-cli` must repeat `-w`/`-t` on later invocations because each CLI call starts fresh
-- direct MCP can select/bind once per session (for example via `manage_workspaces` / tab selection) and keep that routing for subsequent tool calls
+- direct MCP can bind once per session via `manage_workspaces` with `action="select_tab"`, then keep routing subsequent tool calls to that tab until you change it
 
 Core rule that stays true in both lanes:
 selection is context.
@@ -202,8 +202,22 @@ rp-cli -c bind_context -j '{
 ```
 
 Use `bind_context` for routing.
-Use `manage_workspaces` when you truly need workspace inventory or workspace lifecycle.
-With `rp-cli`, remember that window/tab targeting is usually explicit per invocation unless you rely on Repo Prompt's active state or a wrapper like `rpflow`.
+Use `manage_workspaces` when you truly need workspace or tab lifecycle control.
+Important `manage_workspaces` actions include:
+- `list`, `switch`, `create`, `delete`
+- `add_folder`, `remove_folder`
+- `list_tabs`, `select_tab`, `create_tab`, `close_tab`
+
+Important routing reality:
+- with direct MCP, use `manage_workspaces` + `action="select_tab"` once to bind your session to a tab
+- with raw `rp-cli`, every invocation is fresh, so repeat `-w <id>` each time and usually `-t <tab>` too when multiple windows/tabs exist
+
+Useful workspace/tab control details:
+- `create_tab` supports `mode="blank"` or `mode="fork"`, plus `source_tab`, `bind`, and `focus`
+- `create` / `switch` can use `open_in_new_window`
+- `create` can use `switch_to_created`
+- `close_tab` refuses to close the last remaining tab, the currently visible tab unless `allow_active=true`, or tabs with live bound runs
+- `windows` / `list_windows` is the zero-parameter window discovery lane
 
 Manual exec-style examples are fine when speed matters:
 
@@ -474,11 +488,22 @@ Repo Prompt also exposes workflow-oriented slash-command style affordances in so
 Treat those as first-class current product behavior, not trivia.
 In Claude Code specifically, telling the user/agent to type `/repo` is the fast way to discover the installed Repo Prompt command set.
 
+Control-surface rules that actually matter:
+- `agent_run` ops are `start`, `poll`, `wait`, `cancel`, `steer`, and `respond`
+- `start` takes the initial `message` plus optional `session_name`, `model_id`, `workflow_id` / `workflow_name`, `timeout`, and `detach`
+- do not pass `session_id` to `start`; use `steer` to continue an existing session
+- `poll`, `wait`, and `cancel` require `session_id`
+- `steer` requires `session_id` + `message`; add `wait=true` and optionally `timeout_seconds` when you want the call to block for the next interesting state
+- `respond` requires `session_id`, `interaction_id`, and a reply payload like `response`, `answers`, or `amendment`
+- failed/cancelled runs can expose `failure_reason` values like `process_crash`, `timeout`, `agent_error`, or `cancelled`
+- `agent_manage` and `agent_run` are advanced/policy-gated; use `rp-cli -d agent_run` or `rp-cli -d agent_manage` for the full schema when you need exact enums/types
+
 Examples:
 
 ```bash
 rp-cli -c agent_manage -j '{"op":"list_agents"}'
 rp-cli -c agent_manage -j '{"op":"list_workflows"}'
+rp-cli -c agent_manage -j '{"op":"list_sessions","limit":5}'
 rp-cli -c agent_run -j '{
   "op":"start",
   "model_id":"engineer",
@@ -486,6 +511,9 @@ rp-cli -c agent_run -j '{
   "message":"Use the current selection and prompt to implement the task.",
   "timeout":300
 }'
+rp-cli -c agent_run -j '{"op":"wait","session_id":"<uuid>","timeout":10}'
+rp-cli -c agent_run -j '{"op":"steer","session_id":"<uuid>","message":"Fix it","wait":true}'
+rp-cli -c agent_run -j '{"op":"respond","session_id":"<uuid>","interaction_id":"<i>","response":"accept"}'
 ```
 
 For follow-up turns on an existing Agent Mode session, use `agent_run` with `steer` or `respond`, not a fake new-chat flow.
