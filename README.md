@@ -16,7 +16,7 @@ Current stance:
 - Repo Prompt app running
 - MCP Server enabled in Repo Prompt settings
 - rp-cli on PATH
-- rpflow repo available at $HOME/Documents/github/repoprompt-rpflow-cli
+- rpflow repo available at $HOME/.hermes/vendor/repoprompt-rpflow-cli
 
 Setup/control-plane notes:
 - install `rp-cli` from Repo Prompt settings when needed
@@ -125,10 +125,10 @@ Useful extra notes:
 - Gemini CLI is still beta and currently lacks some Agent Mode capabilities like compaction and bash-tool parity
 - first-time provider setup/testing belongs in the Repo Prompt app settings/onboarding flow, not rpflow
 
-## Install (OpenClaw)
-1) Clone this repo into `~/.openclaw/workspace/skills/repoprompt` for workspace-local install, or `~/.openclaw/skills/repoprompt` for shared install.
+## Install (Hermes migration)
+1) Clone this repo into `~/.hermes/skills/openclaw/openclaw-repoprompt` for Hermes-local install.
 2) Enable MCP Server in Repo Prompt and install rp-cli to PATH.
-3) Ensure the rpflow repo exists at `$HOME/Documents/github/repoprompt-rpflow-cli` (or set `RPFLOW_REPO`).
+3) Ensure the rpflow repo exists at `$HOME/.hermes/vendor/repoprompt-rpflow-cli` (or set `RPFLOW_REPO`).
 4) Start a new session after install so the skill is available in fresh context.
 
 ## Quick sanity checks

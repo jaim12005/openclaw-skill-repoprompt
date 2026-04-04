@@ -1,5 +1,5 @@
 ---
-name: repoprompt
+name: openclaw-repoprompt
 description: Use Repo Prompt for repository planning, discovery, review, and editing. Prefer MCP-native Repo Prompt tools first; use rpflow only for shell-based deterministic automation, report-json traces, timeout/retry/fallback exports, or wrapper-driven flows.
 ---
 
@@ -604,7 +604,7 @@ A practical special case: `claude-rp` is a Repo Prompt-provided Claude Code wrap
 
 ## rpflow commands that still matter
 
-From `/Users/clawdbot/Documents/github/repoprompt-rpflow-cli`:
+From `/Users/clawdbot/.hermes/vendor/repoprompt-rpflow-cli`:
 
 ```bash
 python3 -m rpflow.cli doctor
@@ -645,12 +645,12 @@ Architecture/security notes that matter operationally:
 
 ## Local defaults on this machine
 
-- Repo Prompt orchestrator repo: `/Users/clawdbot/Documents/github/repoprompt-rpflow-cli`
-- Skill repo: `/Users/clawdbot/.openclaw/workspace/skills/repoprompt`
+- Repo Prompt orchestrator repo: `/Users/clawdbot/.hermes/vendor/repoprompt-rpflow-cli`
+- Skill repo: `/Users/clawdbot/.hermes/skills/openclaw/openclaw-repoprompt`
 - `rp-cli` is the direct bridge into Repo Prompt MCP tools
 - `scripts/rpflow.sh` is the wrapper into the local rpflow repo
 
-## Recommended operating pattern in OpenClaw
+## Recommended operating pattern in Hermes
 
 For repo work:
 1. Bind Repo Prompt to the repo by working directory.

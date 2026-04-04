@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-RPFLOW_REPO="${RPFLOW_REPO:-$HOME/Documents/github/repoprompt-rpflow-cli}"
+RPFLOW_REPO="${RPFLOW_REPO:-$HOME/.hermes/vendor/repoprompt-rpflow-cli}"
 DEFAULT_WORKSPACE="${RP_WORKSPACE:-}"
 DEFAULT_TAB="${RP_TAB:-}"
 DEFAULT_PROFILE="${RP_PROFILE:-normal}"
@@ -19,7 +19,7 @@ Examples:
   rpflow.sh autopilot --select-set repo/src/ --task "draft plan" --out /tmp/plan.md
 
 Behavior:
-  - Runs rpflow from RPFLOW_REPO (default: $HOME/Documents/github/repoprompt-rpflow-cli)
+  - Runs rpflow from RPFLOW_REPO (default: $HOME/.hermes/vendor/repoprompt-rpflow-cli)
   - Injects default --profile (RP_PROFILE or normal) when not provided
   - For exec/call/export/plan-export/autopilot/smoke, injects --workspace/--tab only when provided via env or args; otherwise rpflow auto-resolves from the active Repo Prompt binding/state
 USAGE
